@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DataBridge — Supply Allocator</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgNjQgNjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwZjExMTciLz4KICA8cmVjdCB4PSIxIiB5PSIxIiB3aWR0aD0iNjIiIGhlaWdodD0iNjIiIHJ4PSIxMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMmEyZjNmIiBzdHJva2Utd2lkdGg9IjEiLz4KCiAgPHBhdGggZD0iTTE2IDQwIEMgMTYgMjYsIDQ4IDI2LCA0OCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjNGY3ZmZmIiBzdHJva2Utd2lkdGg9IjQuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CgogIDxsaW5lIHgxPSIyNCIgeTE9IjMwLjUiIHgyPSIyNCIgeTI9IjM4IiBzdHJva2U9IiM0ZjdmZmYiIHN0cm9rZS13aWR0aD0iMyIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBvcGFjaXR5PSIwLjYiLz4KICA8bGluZSB4MT0iMzIiIHkxPSIyNy4zIiB4Mj0iMzIiIHkyPSIzOCIgc3Ryb2tlPSIjNGY3ZmZmIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC42Ii8+CiAgPGxpbmUgeDE9IjQwIiB5MT0iMzAuNSIgeDI9IjQwIiB5Mj0iMzgiIHN0cm9rZT0iIzRmN2ZmZiIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNiIvPgoKICA8Y2lyY2xlIGN4PSIxNiIgY3k9IjQwIiByPSI1LjUiIGZpbGw9IiMxODFiMjQiIHN0cm9rZT0iIzRmN2ZmZiIgc3Ryb2tlLXdpZHRoPSIyLjUiLz4KICA8Y2lyY2xlIGN4PSI0OCIgY3k9IjQwIiByPSI1LjUiIGZpbGw9IiMxODFiMjQiIHN0cm9rZT0iIzJkZDRhMCIgc3Ryb2tlLXdpZHRoPSIyLjUiLz4KICA8Y2lyY2xlIGN4PSI0OCIgY3k9IjQwIiByPSIyIiBmaWxsPSIjMmRkNGEwIi8+Cjwvc3ZnPg==">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="theme-color" content="#0f1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DataBridge">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#0f1117; --surface:#181b24; --panel:#1e2230; --border:#2a2f3f;
+    --accent:#4f7fff; --accent-lo:rgba(79,127,255,.12);
+    --green:#2dd4a0; --amber:#f5a623; --red:#e05555; --purple:#a78bfa;
+    --teal:#22d3ee;
+    --text:#e2e6f0; --muted:#6b7394;
+    --mono:'IBM Plex Mono',monospace; --sans:'Inter',sans-serif;
+  }
+  body { font-family:var(--sans); background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; }
+  header { display:flex; align-items:center; justify-content:space-between; padding:0 28px; height:52px; border-bottom:1px solid var(--border); background:var(--surface); position:sticky; top:0; z-index:10; }
+  .logo { font-family:var(--mono); font-size:13px; font-weight:500; letter-spacing:.08em; color:var(--accent); }
+  .logo span { color:var(--muted); }
+  .vbadge { font-family:var(--mono); font-size:11px; color:var(--muted); background:var(--panel); border:1px solid var(--border); padding:3px 8px; border-radius:4px; }
+  .step-rail { display:flex; align-items:center; padding:0 28px; background:var(--surface); border-bottom:1px solid var(--border); height:42px; overflow-x:auto; flex-shrink:0; }
+  .step { display:flex; align-items:center; gap:7px; font-size:12px; font-weight:500; color:var(--muted); padding-right:14px; white-space:nowrap; }
+  .step.active { color:var(--text); } .step.done { color:var(--green); }
+  .step-num { width:19px; height:19px; border-radius:50%; border:1px solid currentColor; display:grid; place-items:center; font-family:var(--mono); font-size:10px; flex-shrink:0; }
+  .step.active .step-num { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .step.done   .step-num { background:var(--green); border-color:var(--green); color:#0f1117; }
+  .step-arrow { color:var(--border); margin:0 2px; }
+  main { flex:1; display:grid; grid-template-columns:300px 1fr; overflow:hidden; min-height:0; }
+  aside { background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:16px 0 20px; overflow-y:auto; }
+  .slabel { font-family:var(--mono); font-size:10px; letter-spacing:.12em; color:var(--muted); text-transform:uppercase; padding:0 16px 7px; margin-top:16px; }
+  .slabel:first-child { margin-top:0; }
+  .ucard { margin:0 10px 7px; background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:10px 11px; transition:border-color .15s; }
+  .ucard:hover { border-color:rgba(79,127,255,.35); }
+  .ucard-label { font-size:10px; font-weight:600; color:var(--muted); letter-spacing:.06em; text-transform:uppercase; margin-bottom:7px; display:flex; align-items:center; gap:6px; }
+  .dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+  .dot-src { background:var(--accent); } .dot-inv { background:var(--teal); }
+  .dot-dates { background:var(--amber); } .dot-out { background:var(--green); }
+  .uzone { border:1px dashed var(--border); border-radius:6px; padding:8px; text-align:center; cursor:pointer; transition:all .15s; position:relative; }
+  .uzone:hover, .uzone.drag-over { border-color:var(--accent); background:var(--accent-lo); }
+  .uzone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+  .uzone-icon { font-size:15px; margin-bottom:2px; }
+  .uzone-hint { font-size:10px; color:var(--muted); line-height:1.4; }
+  .uzone-hint strong { color:var(--text); font-weight:500; }
+  .fpill { display:flex; align-items:center; gap:7px; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:5px 8px; font-size:10px; font-family:var(--mono); color:var(--text); margin-top:5px; }
+  .fpill-icon { color:var(--green); } .fpill-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .fpill-rm { color:var(--muted); cursor:pointer; font-size:13px; background:none; border:none; padding:0; }
+  .fpill-rm:hover { color:var(--red); }
+  .fstats { display:flex; gap:5px; margin-top:5px; flex-wrap:wrap; }
+  .schip { font-family:var(--mono); font-size:10px; color:var(--muted); background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:2px 6px; }
+  .schip strong { color:var(--text); }
+  .ssheet { margin-top:5px; width:100%; background:var(--bg); border:1px solid var(--border); border-radius:5px; padding:3px 6px; font-size:10px; font-family:var(--mono); color:var(--text); cursor:pointer; }
+  .ssheet:focus { outline:none; border-color:var(--accent); }
+  .cust-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px; padding:0 10px; }
+  .cust-btn { background:var(--panel); border:1px solid var(--border); border-radius:6px; padding:8px 5px; font-size:10px; font-weight:600; color:var(--muted); cursor:pointer; text-align:center; transition:all .15s; line-height:1.3; }
+  .cust-btn:hover { border-color:var(--accent); color:var(--text); }
+  .cust-btn.selected { border-color:var(--accent); background:var(--accent-lo); color:var(--accent); }
+  .lkcard { margin:0 10px 7px; background:var(--panel); border:1px solid rgba(45,212,160,.2); border-radius:8px; padding:11px 12px; }
+  .lkcard-title { font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:.08em; text-transform:uppercase; margin-bottom:10px; }
+  .lkrow { display:flex; flex-direction:column; gap:2px; margin-bottom:8px; }
+  .lkrow:last-child { margin-bottom:0; }
+  .lklabel { font-size:10px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:5px; }
+  .lksub { font-size:10px; color:var(--muted); font-family:var(--mono); margin-bottom:2px; }
+  .lksel { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:5px; padding:4px 7px; font-size:10px; font-family:var(--mono); color:var(--text); cursor:pointer; }
+  .lksel:focus { outline:none; border-color:var(--accent); }
+  .lksel.set { border-color:rgba(45,212,160,.4); color:var(--green); }
+  .lkdiv { border:none; border-top:1px solid var(--border); margin:8px 0; }
+  .lkdot { width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+  .out-col-card { margin:0 10px 7px; background:var(--panel); border:1px solid rgba(167,139,250,.2); border-radius:8px; padding:11px 12px; }
+  .out-col-label { font-size:10px; font-weight:600; color:var(--text); margin-bottom:4px; }
+  .out-col-sub { font-size:10px; color:var(--muted); font-family:var(--mono); margin-bottom:6px; line-height:1.5; }
+  .out-col-sel { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:5px; padding:4px 7px; font-size:10px; font-family:var(--mono); color:var(--text); cursor:pointer; }
+  .out-col-sel:focus { outline:none; border-color:var(--purple); }
+  .out-col-sel.set { border-color:rgba(167,139,250,.4); color:var(--purple); }
+  .rbar { margin:10px 10px 0; display:flex; gap:4px; }
+  .rpip { flex:1; height:3px; border-radius:2px; background:var(--border); transition:background .3s; }
+  .rpip.on { background:var(--accent); } .rpip.all { background:var(--green); }
+  .run-btn { margin:8px 10px 0; background:var(--accent); border:none; border-radius:7px; padding:10px; font-family:var(--sans); font-size:13px; font-weight:600; color:#fff; cursor:pointer; width:calc(100% - 20px); transition:opacity .15s,transform .1s; }
+  .run-btn:hover:not(:disabled) { opacity:.85; }
+  .run-btn:active:not(:disabled) { transform:scale(.98); }
+  .run-btn:disabled { opacity:.3; cursor:not-allowed; }
+  .save-btn { display:flex; align-items:center; justify-content:center; gap:6px; margin:6px 10px 0; background:none; border:1px solid var(--border); border-radius:6px; padding:7px 10px; font-family:var(--mono); font-size:11px; color:var(--muted); cursor:pointer; width:calc(100% - 20px); transition:all .15s; }
+  .save-btn:hover { border-color:var(--green); color:var(--green); }
+  .export-btn { display:inline-flex; align-items:center; gap:8px; background:var(--green); border:none; border-radius:7px; padding:10px 18px; font-family:var(--sans); font-size:13px; font-weight:600; color:#0f1117; cursor:pointer; transition:opacity .15s; margin-top:14px; margin-right:8px; }
+  .export-btn:hover { opacity:.88; }
+  .export-btn.secondary { background:var(--panel); border:1px solid var(--border); color:var(--text); }
+  .content { display:flex; flex-direction:column; overflow:hidden; min-height:0; }
+  .tab-bar { display:flex; border-bottom:1px solid var(--border); background:var(--surface); padding:0 20px; overflow-x:auto; flex-shrink:0; }
+  .tab { padding:0 13px; height:42px; display:flex; align-items:center; font-size:12px; font-weight:500; color:var(--muted); border-bottom:2px solid transparent; cursor:pointer; transition:all .15s; white-space:nowrap; }
+  .tab:hover { color:var(--text); }
+  .tab.active { color:var(--text); border-bottom-color:var(--accent); }
+  .tab-count { margin-left:5px; background:var(--panel); border-radius:10px; padding:1px 6px; font-family:var(--mono); font-size:10px; color:var(--muted); }
+  .tab-warn { margin-left:4px; color:var(--amber); font-size:11px; }
+  .panel-body { flex:1; overflow-y:auto; padding:18px 22px; min-height:0; }
+  .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:12px; color:var(--muted); text-align:center; min-height:200px; }
+  .empty-icon { font-size:34px; opacity:.4; }
+  .empty-title { font-size:15px; font-weight:500; color:var(--text); }
+  .empty-sub { font-size:13px; max-width:360px; line-height:1.6; }
+  .callout { background:var(--panel); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:6px; padding:10px 13px; font-size:12px; line-height:1.6; color:var(--muted); margin-bottom:14px; }
+  .callout strong { color:var(--text); }
+  .callout.warn { border-left-color:var(--amber); }
+  .callout.ok   { border-left-color:var(--green); }
+  .sum-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:18px; }
+  .sum-card { background:var(--panel); border:1px solid var(--border); border-radius:8px; padding:13px 14px; }
+  .sum-num { font-family:var(--mono); font-size:24px; font-weight:500; line-height:1; margin-bottom:4px; }
+  .sum-label { font-size:11px; color:var(--muted); }
+  .c-green { color:var(--green); } .c-amber { color:var(--amber); } .c-red { color:var(--red); } .c-teal { color:var(--teal); }
+  .tscroll { overflow-x:auto; border:1px solid var(--border); border-radius:6px; margin-bottom:20px; }
+  .dtable { width:100%; border-collapse:collapse; font-size:11px; font-family:var(--mono); min-width:500px; }
+  .dtable th { background:var(--panel); color:var(--muted); font-size:10px; letter-spacing:.07em; text-transform:uppercase; padding:7px 10px; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap; position:sticky; top:0; }
+  .dtable th.kh { color:var(--green); }
+  .dtable td { padding:5px 10px; border-bottom:1px solid var(--border); white-space:nowrap; max-width:260px; overflow:hidden; text-overflow:ellipsis; }
+  .dtable td.kc { color:var(--green); font-weight:500; }
+  .dtable td.ec { color:var(--border); }
+  .dtable tr:hover td { background:var(--panel); }
+  .dtable tr:last-child td { border-bottom:none; }
+  .more-rows { font-family:var(--mono); font-size:10px; color:var(--muted); padding:5px 9px; text-align:center; border-top:1px solid var(--border); background:var(--panel); }
+  .badge { display:inline-block; padding:2px 6px; border-radius:4px; font-size:10px; font-family:var(--mono); font-weight:600; }
+  .b-match  { background:rgba(45,212,160,.12); color:var(--green); }
+  .b-append { background:rgba(79,127,255,.15);  color:var(--accent); }
+  .b-nosrc  { background:rgba(245,166,35,.12);  color:var(--amber); }
+  .b-stock  { background:rgba(34,211,238,.12);  color:var(--teal); }
+  .prev-section { margin-bottom:24px; }
+  .prev-title { font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:.07em; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .map-table { width:100%; border-collapse:collapse; }
+  .map-table th { background:var(--panel); color:var(--muted); font-family:var(--mono); font-size:10px; letter-spacing:.07em; text-transform:uppercase; padding:7px 11px; text-align:left; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:1; }
+  .map-table td { padding:5px 10px; border-bottom:1px solid var(--border); vertical-align:middle; font-size:12px; }
+  .map-table tr:hover td { background:rgba(255,255,255,.015); }
+  .map-table tr.row-flagged td { background:rgba(245,166,35,.03); }
+  .map-table tr.row-flagged td:first-child { border-left:2px solid var(--amber); padding-left:9px; }
+  .out-col { font-family:var(--mono); font-size:11px; color:var(--text); display:flex; align-items:center; gap:6px; }
+  .lock-icon { font-size:9px; color:var(--border); }
+  .src-sel { width:100%; background:var(--panel); border:1px solid var(--border); border-radius:5px; padding:4px 7px; font-size:11px; font-family:var(--mono); color:var(--text); cursor:pointer; }
+  .src-sel:focus { outline:none; border-color:var(--accent); }
+  .src-sel.unmapped { border-color:rgba(245,166,35,.5); color:var(--amber); }
+  .src-sel.mapped   { border-color:rgba(45,212,160,.3); color:var(--green); }
+  .ok-pill   { font-family:var(--mono); font-size:9px; padding:2px 6px; border-radius:3px; background:rgba(45,212,160,.1); color:var(--green); }
+  .flag-pill { font-family:var(--mono); font-size:9px; padding:2px 6px; border-radius:3px; background:rgba(245,166,35,.12); color:var(--amber); font-weight:600; }
+  .log-panel { font-family:var(--mono); font-size:12px; line-height:1.8; }
+  .log-entry { display:flex; gap:12px; padding:1px 0; }
+  .log-time { color:var(--border); flex-shrink:0; }
+  .log-ok { color:var(--green); } .log-warn { color:var(--amber); } .log-err { color:var(--red); } .log-info { color:var(--accent); }
+
+  /* ── TOOLTIPS ── */
+  .tip-wrap { position:relative; display:inline-flex; align-items:center; }
+  .tip-icon { display:inline-flex; align-items:center; justify-content:center; width:13px; height:13px; border-radius:50%; background:var(--border); color:var(--muted); font-size:8px; font-family:var(--mono); font-weight:600; cursor:help; margin-left:5px; flex-shrink:0; line-height:1; transition:background .15s; }
+  .tip-icon:hover { background:var(--accent); color:#fff; }
+  .tip-bubble { display:none; position:absolute; left:20px; top:50%; transform:translateY(-50%); width:220px; background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:9px 11px; font-size:11px; font-family:var(--sans); color:var(--text); line-height:1.5; z-index:100; box-shadow:0 4px 16px rgba(0,0,0,.4); pointer-events:none; }
+  .tip-bubble::before { content:''; position:absolute; left:-5px; top:50%; transform:translateY(-50%); width:0; height:0; border-top:5px solid transparent; border-bottom:5px solid transparent; border-right:5px solid var(--border); }
+  .tip-wrap:hover .tip-bubble { display:block; }
+  .tip-bubble strong { color:var(--accent); display:block; margin-bottom:3px; }
+  ::-webkit-scrollbar { width:5px; height:5px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">DATA<span>BRIDGE</span></div>
+  <div class="vbadge">v1.0 — Inventory + Multi-Date</div>
+</header>
+
+<div class="step-rail">
+  <div class="step active" id="s1"><div class="step-num">1</div>Load Files</div>
+  <div class="step-arrow">›</div>
+  <div class="step" id="s2"><div class="step-num">2</div>Select Customer</div>
+  <div class="step-arrow">›</div>
+  <div class="step" id="s3"><div class="step-num">3</div>Configure</div>
+  <div class="step-arrow">›</div>
+  <div class="step" id="s4"><div class="step-num">4</div>Allocate</div>
+  <div class="step-arrow">›</div>
+  <div class="step" id="s5"><div class="step-num">5</div>Fill Output</div>
+  <div class="step-arrow">›</div>
+  <div class="step" id="s6"><div class="step-num">6</div>Export</div>
+</div>
+
+<main>
+<aside>
+  <div class="slabel">Source Files</div>
+
+  <div class="ucard" id="card-src">
+    <div class="ucard-label"><div class="dot dot-src"></div>Back Orders & Open Orders Report</div>
+    <div class="uzone" id="zone-src"><input type="file" accept=".xlsx,.xls,.csv" id="file-src">
+      <div class="uzone-icon">📋</div><div class="uzone-hint"><strong>Click or drag</strong><br>.xlsx / .csv</div></div>
+    <div id="pill-src" style="display:none" class="fpill">
+      <span class="fpill-icon">✓</span><span class="fpill-name" id="pill-src-name"></span>
+      <button class="fpill-rm" onclick="clearFile('src')">✕</button></div>
+  </div>
+
+  <div class="ucard" id="card-inv">
+    <div class="ucard-label"><div class="dot dot-inv"></div>Inventory List <span style="color:var(--muted);font-size:9px;font-family:var(--mono);text-transform:none;letter-spacing:0">(checked first)</span></div>
+    <div class="uzone" id="zone-inv"><input type="file" accept=".xlsx,.xls,.csv" id="file-inv">
+      <div class="uzone-icon">🏭</div><div class="uzone-hint"><strong>Click or drag</strong><br>.xlsx / .csv</div></div>
+    <div id="pill-inv" style="display:none" class="fpill">
+      <span class="fpill-icon">✓</span><span class="fpill-name" id="pill-inv-name"></span>
+      <button class="fpill-rm" onclick="clearFile('inv')">✕</button></div>
+  </div>
+
+  <div class="ucard" id="card-dates">
+    <div class="ucard-label"><div class="dot dot-dates"></div>Purchase Lines</div>
+    <div class="uzone" id="zone-dates"><input type="file" accept=".xlsx,.xls,.csv" id="file-dates">
+      <div class="uzone-icon">📅</div><div class="uzone-hint"><strong>Click or drag</strong><br>.xlsx / .csv</div></div>
+    <div id="pill-dates" style="display:none" class="fpill">
+      <span class="fpill-icon">✓</span><span class="fpill-name" id="pill-dates-name"></span>
+      <button class="fpill-rm" onclick="clearFile('dates')">✕</button></div>
+  </div>
+
+  <div class="ucard" id="card-out">
+    <div class="ucard-label"><div class="dot dot-out"></div>Customer Report/Template</div>
+    <div class="uzone" id="zone-out"><input type="file" accept=".xlsx,.xls,.csv" id="file-out">
+      <div class="uzone-icon">📤</div><div class="uzone-hint"><strong>Click or drag</strong><br>Customer template file</div></div>
+    <div id="pill-out" style="display:none" class="fpill">
+      <span class="fpill-icon">✓</span><span class="fpill-name" id="pill-out-name"></span>
+      <button class="fpill-rm" onclick="clearFile('out')">✕</button></div>
+  </div>
+
+  <!-- Item Reference List — static, persists across sessions -->
+  <div class="slabel">Item Reference List <span style="color:var(--muted);font-size:9px;font-family:var(--mono);text-transform:none;letter-spacing:0">(static)</span></div>
+  <div class="ucard" id="card-dict" style="border-color:rgba(167,139,250,.2)">
+    <div class="ucard-label"><div class="dot" style="background:var(--purple)"></div>Item Reference List</div>
+    <div id="dict-loaded-info" style="display:none;font-family:var(--mono);font-size:10px;color:var(--green);margin-bottom:6px;">✓ Dictionary loaded from storage</div>
+    <div class="uzone" id="zone-dict"><input type="file" accept=".xlsx,.xls,.csv" id="file-dict">
+      <div class="uzone-icon">📖</div><div class="uzone-hint"><strong>Click or drag</strong><br>Item Ref → Item No. lookup<br><span style="color:var(--muted)">(saved between sessions)</span></div></div>
+    <div id="pill-dict" style="display:none" class="fpill">
+      <span class="fpill-icon">✓</span><span class="fpill-name" id="pill-dict-name"></span>
+      <button class="fpill-rm" onclick="clearDict()">✕</button></div>
+    <div id="dict-stats" style="display:none" class="fstats"></div>
+  </div>
+
+  <div class="slabel">Customer</div>
+  <div class="cust-grid">
+    <button class="cust-btn" data-c="ZINFRA_AUSNET" onclick="selectCustomer(this)">ZINFRA<br>AUSNET</button>
+    <button class="cust-btn" data-c="ZINFRA_UE"     onclick="selectCustomer(this)">ZINFRA<br>UE</button>
+    <button class="cust-btn" data-c="ZINFRA_JEMENA" onclick="selectCustomer(this)">ZINFRA<br>JEMENA</button>
+    <button class="cust-btn" data-c="POWERCOR"       onclick="selectCustomer(this)">POWERCOR</button>
+  </div>
+
+  <div id="lk-section" style="display:none">
+    <div class="slabel">Logic Keys</div>
+    <div class="lkcard">
+      <div class="lkcard-title">Columns that drive the logic</div>
+
+      <div style="font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">Back Orders & Open Orders Report</div>
+      <div class="lkrow">
+        <div class="lklabel"><div class="lkdot" style="background:var(--accent)"></div>Item No.
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>Item No.</strong>The internal material/item number used to link demand rows to inventory stock and purchase order lines. This must match the Item No. in the Inventory List and Purchase Lines files.</div></div>
+        </div>
+        <div class="lksub">Links to inventory &amp; PO lines</div>
+        <select class="lksel" id="lk-src-itemno" onchange="onLKChange()"><option value="">— select —</option></select>
+      </div>
+      <div class="lkrow">
+        <div class="lklabel"><div class="lkdot" style="background:var(--accent)"></div>Outstanding Qty
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>Outstanding Qty</strong>The quantity still to be delivered for this order line. Used in the FIFO allocation to determine how much inventory or incoming stock is needed to fill each order.</div></div>
+        </div>
+        <div class="lksub">Quantity to fill (col Z)</div>
+        <select class="lksel" id="lk-src-qty" onchange="onLKChange()"><option value="">— select —</option></select>
+      </div>
+      <div class="lkrow">
+        <div class="lklabel"><div class="lkdot" style="background:var(--accent)"></div>Order Date
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>Order Date</strong>The date of the original order. Used to sort demand oldest to newest before FIFO allocation — older orders get filled before newer ones.</div></div>
+        </div>
+        <div class="lksub">Oldest → newest sort (col V)</div>
+        <select class="lksel" id="lk-src-date" onchange="onLKChange()"><option value="">— select —</option></select>
+      </div>
+      <div class="lkrow">
+        <div class="lklabel"><div class="lkdot" style="background:var(--accent)"></div>External Doc No.
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>External Doc No.</strong>The customer's purchase order number. Used as one half of the composite key to match rows in the customer report/template. Must match the PUR.DOC column in the output.</div></div>
+        </div>
+        <div class="lksub">Match key for output template</div>
+        <select class="lksel" id="lk-src-extdoc" onchange="onLKChange()"><option value="">— select —</option></select>
+      </div>
+      <div class="lkrow">
+        <div class="lklabel"><div class="lkdot" style="background:var(--accent)"></div>Item Ref No.
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>Item Ref No.</strong>The item reference number used by the customer. Used as the second half of the composite key to match rows in the customer report/template. Must match the MATERIAL column in the output.</div></div>
+        </div>
+        <div class="lksub">Match key for output template</div>
+        <select class="lksel" id="lk-src-itemref" onchange="onLKChange()"><option value="">— select —</option></select>
+      </div>
+
+      <hr class="lkdiv">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--teal);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">Inventory List</div>
+      <div class="lkrow">
+        <div class="lklabel"><div class="lkdot" style="background:var(--teal)"></div>Item No.
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>Inventory Item No.</strong>The item number in the inventory list. If an Item Reference List is loaded, the demand row's Item Ref is translated to an Item No. via the dictionary before checking this column.</div></div>
+        </div>
+        <div class="lksub">Matched to Source Item No.</div>
+        <select class="lksel" id="lk-inv-itemno" onchange="onLKChange()"><option value="">— select —</option></select>
+      </div>
+      <div class="lkrow">
+        <div class="lklabel"><div class="lkdot" style="background:var(--teal)"></div>On Hand Qty
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>On Hand Qty</strong>The quantity currently in stock. Inventory is checked first in the FIFO allocation — stock is drawn down before any purchase order dates are used.</div></div>
+        </div>
+        <div class="lksub">Available stock to draw from</div>
+        <select class="lksel" id="lk-inv-qty" onchange="onLKChange()"><option value="">— select —</option></select>
+      </div>
+
+      <hr class="lkdiv">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--amber);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">Purchase Lines</div>
+      <div class="lkrow">
+        <div class="lklabel"><div class="lkdot" style="background:var(--amber)"></div>Item No.
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>PO Item No.</strong>The item number on the purchase order line. Matched against the source document's Item No. to find which PO lines supply each order.</div></div>
+        </div>
+        <div class="lksub">Matched to Source Item No.</div>
+        <select class="lksel" id="lk-dates-itemno" onchange="onLKChange()"><option value="">— select —</option></select>
+      </div>
+      <div class="lkrow">
+        <div class="lklabel"><div class="lkdot" style="background:var(--amber)"></div>PO Qty
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>PO Qty</strong>The outstanding quantity on this purchase order line. Lines with zero quantity are automatically skipped. Supply is drawn from PO lines oldest to newest until the order quantity is met.</div></div>
+        </div>
+        <div class="lksub">Available supply qty (col N)</div>
+        <select class="lksel" id="lk-dates-qty" onchange="onLKChange()"><option value="">— select —</option></select>
+      </div>
+      <div class="lkrow">
+        <div class="lklabel"><div class="lkdot" style="background:var(--amber)"></div>Delivery Date
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>Delivery Date</strong>The expected arrival date for stock on this PO line. PO lines are sorted oldest to newest by this date. The date written to the output reflects the last PO drawn from to complete an order.</div></div>
+        </div>
+        <div class="lksub">Expected arrival (col Q)</div>
+        <select class="lksel" id="lk-dates-date" onchange="onLKChange()"><option value="">— select —</option></select>
+      </div>
+
+      <hr class="lkdiv">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--purple);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">Item Reference List</div>
+      <div class="lkrow">
+        <div class="lklabel"><div class="lkdot" style="background:var(--purple)"></div>Item Ref column
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>Item Ref column</strong>The item reference number in the dictionary. When checking inventory, the demand row's Item Ref is looked up here to find the corresponding Item No., ensuring accurate stock matching.</div></div>
+        </div>
+        <div class="lksub">The reference to look up</div>
+        <select class="lksel" id="lk-dict-itemref" onchange="buildDictMap();onLKChange()"><option value="">— select —</option></select>
+      </div>
+      <div class="lkrow">
+        <div class="lklabel"><div class="lkdot" style="background:var(--purple)"></div>Item No. column
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>Item No. column</strong>The item number that the Item Ref maps to. This resolved Item No. is used to look up available stock in the Inventory List.</div></div>
+        </div>
+        <div class="lksub">The item number it maps to</div>
+        <select class="lksel" id="lk-dict-itemno" onchange="buildDictMap();onLKChange()"><option value="">— select —</option></select>
+      </div>
+
+      <hr class="lkdiv">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">Customer Report/Template</div>
+      <div class="lkrow">
+        <div class="lklabel"><div class="lkdot" style="background:var(--green)"></div>PUR.DOC column
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>PUR.DOC column</strong>The column in the customer report that holds the purchase order / external document number. Used to match source rows against existing rows in the output.</div></div>
+        </div>
+        <div class="lksub">Matched against Ext Doc No.</div>
+        <select class="lksel" id="lk-out-extdoc" onchange="onLKChange()"><option value="">— select —</option></select>
+      </div>
+      <div class="lkrow">
+        <div class="lklabel"><div class="lkdot" style="background:var(--green)"></div>MATERIAL column
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>MATERIAL column</strong>The column in the customer report that holds the item/material reference number. Used alongside PUR.DOC as the composite match key. Not required in Single Key match mode.</div></div>
+        </div>
+        <div class="lksub">Matched against Item Ref No.</div>
+        <select class="lksel" id="lk-out-itemref" onchange="onLKChange()"><option value="">— select —</option></select>
+      </div>
+
+      <hr class="lkdiv">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--purple);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">Match Mode</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <label style="display:flex;align-items:center;gap:7px;font-size:10px;cursor:pointer;">
+          <input type="radio" name="match-mode" value="composite" id="mm-composite" onchange="onLKChange()" checked>
+          <span style="color:var(--text);font-weight:500;">Composite</span>
+          <span style="color:var(--muted);font-family:var(--mono);font-size:9px;">Ext Doc No. + Item Ref</span>
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>Composite Match</strong>Matches rows using both the External Document No. AND the Item Ref No. simultaneously. Use this for customers whose report has one row per item per PO. Recommended for ZINFRA AUSNET, ZINFRA JEMENA, and POWERCOR.</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:10px;cursor:pointer;">
+          <input type="radio" name="match-mode" value="single" id="mm-single" onchange="onLKChange()">
+          <span style="color:var(--text);font-weight:500;">Single key</span>
+          <span style="color:var(--muted);font-family:var(--mono);font-size:9px;">Ext Doc No. only</span>
+          <div class="tip-wrap"><span class="tip-icon">?</span><div class="tip-bubble"><strong>Single Key Match</strong>Matches rows using the External Document No. only. Use this for customers whose report has minimal or no item references populated — e.g. ZINFRA UE.</div></div>
+        </label>
+      </div>
+    </div>
+
+    <div class="slabel">Output Date Column</div>
+    <div class="out-col-card">
+      <div class="out-col-label">Where to write the allocated date(s)</div>
+      <div class="out-col-sub">Dates shown as comma-separated sequence.</div>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px;">
+        <label style="display:flex;align-items:center;gap:7px;font-size:10px;cursor:pointer;">
+          <input type="radio" name="date-col-mode" value="existing" id="dcm-existing" onchange="onDateColModeChange()" checked>
+          <span style="color:var(--text);font-weight:500;">Existing column</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:10px;cursor:pointer;">
+          <input type="radio" name="date-col-mode" value="firstempty" id="dcm-firstempty" onchange="onDateColModeChange()">
+          <span style="color:var(--text);font-weight:500;">First empty column</span>
+          <span style="color:var(--muted);font-family:var(--mono);font-size:9px;">auto-detected</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:10px;cursor:pointer;">
+          <input type="radio" name="date-col-mode" value="new" id="dcm-new" onchange="onDateColModeChange()">
+          <span style="color:var(--text);font-weight:500;">Create new column</span>
+        </label>
+      </div>
+      <div id="dcm-existing-row">
+        <select class="out-col-sel" id="lk-out-datecol" onchange="onLKChange()"><option value="">— select output column —</option></select>
+      </div>
+      <div id="dcm-firstempty-row" style="display:none">
+        <div id="dcm-firstempty-info" style="font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:4px 7px;">Load output template to detect</div>
+      </div>
+      <div id="dcm-new-row" style="display:none">
+        <input type="text" id="dcm-new-name" placeholder="e.g. Allocated Date" onchange="onLKChange()"
+          style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:4px 7px;font-size:10px;font-family:var(--mono);color:var(--text);">
+      </div>
+    </div>
+
+    <div class="slabel">Flag Column</div>
+    <div class="out-col-card" style="border-color:rgba(224,85,85,.2)">
+      <div class="out-col-label">Where to write "REVIEW" for unmatched rows</div>
+      <div class="out-col-sub">Appended rows with no output match will be flagged here.</div>
+      <select class="out-col-sel" id="lk-out-flagcol" onchange="onLKChange()" style="border-color:rgba(224,85,85,.3)"><option value="">— select output column —</option></select>
+    </div>
+  </div>
+
+  <div class="rbar">
+    <div class="rpip" id="pip-files"></div>
+    <div class="rpip" id="pip-cust"></div>
+    <div class="rpip" id="pip-keys"></div>
+  </div>
+  <button class="run-btn" id="run-btn" disabled onclick="runAll()">▶ &nbsp;Run Allocation</button>
+  <button class="save-btn" id="save-btn" onclick="saveConfig()" style="display:none">💾 &nbsp;Save config for <span id="save-label">—</span></button>
+</aside>
+
+<div class="content">
+  <div class="tab-bar">
+    <div class="tab active" onclick="showTab('stage1',this)">Stage 1 — Compiled <span class="tab-count" id="cnt-s1">—</span></div>
+    <div class="tab"        onclick="showTab('stage2',this)">Stage 2 — Output <span class="tab-count" id="cnt-s2">—</span><span class="tab-warn" id="warn-s2" style="display:none">⚠</span></div>
+    <div class="tab"        onclick="showTab('flags',this)">Flags <span class="tab-count" id="cnt-flags">—</span><span class="tab-warn" id="warn-flags" style="display:none">⚠</span></div>
+    <div class="tab"        onclick="showTab('colmap',this)">Column Map <span class="tab-count" id="cnt-colmap">—</span><span class="tab-warn" id="warn-colmap" style="display:none">⚠</span></div>
+    <div class="tab"        onclick="showTab('source',this)">Source Data <span class="tab-count" id="cnt-src">—</span></div>
+    <div class="tab"        onclick="showTab('log',this)">Run Log <span class="tab-count" id="cnt-log">0</span></div>
+  </div>
+  <div class="panel-body" id="panel-stage1">
+    <div class="empty-state"><div class="empty-icon">📊</div><div class="empty-title">Stage 1 results will appear here</div>
+      <div class="empty-sub">Load files, configure logic keys, then click Run Allocation.</div></div>
+  </div>
+  <div class="panel-body" id="panel-stage2" style="display:none">
+    <div class="empty-state"><div class="empty-icon">📤</div><div class="empty-title">Stage 2 results will appear here</div></div>
+  </div>
+  <div class="panel-body" id="panel-flags" style="display:none">
+    <div class="empty-state"><div class="empty-icon">🚩</div><div class="empty-title">No flags yet</div></div>
+  </div>
+  <div class="panel-body" id="panel-colmap" style="display:none">
+    <div class="empty-state"><div class="empty-icon">⚙️</div><div class="empty-title">Load the output template to configure column mapping</div></div>
+  </div>
+  <div class="panel-body" id="panel-source" style="display:none">
+    <div class="empty-state"><div class="empty-icon">📂</div><div class="empty-title">No files loaded yet</div></div>
+  </div>
+  <div class="panel-body" id="panel-log" style="display:none">
+    <div class="log-panel" id="log-entries">
+      <div class="log-entry"><span class="log-time">--:--:--</span><span class="log-info">Ready. Load files to begin.</span></div>
+    </div>
+  </div>
+</div>
+</main>
+
+<script>
+/* ══════════════════════════════════════════
+   CONSTANTS & STATE
+══════════════════════════════════════════ */
+const FILES   = ['src','inv','dates','out'];
+const FLABELS = { src:'Back Orders & Open Orders Report', inv:'Inventory List', dates:'Purchase Lines', out:'Customer Report/Template' };
+const FDOTS   = { src:'dot-src', inv:'dot-inv', dates:'dot-dates', out:'dot-out' };
+
+// Dictionary is handled separately — static, persisted in localStorage
+const DICT_STORAGE_KEY = 'db_itemref_dict';
+
+const LK_DEFS = [
+  { id:'lk-src-itemno',    file:'src',   hints:['no\\.','item no','material','item number'] },
+  { id:'lk-src-qty',       file:'src',   hints:['outstanding','still to be','qty','quantity'] },
+  { id:'lk-src-date',      file:'src',   hints:['date','doc date','order date'] },
+  { id:'lk-src-extdoc',    file:'src',   hints:['external','ext doc','pur.doc','purch','po no','purchase'] },
+  { id:'lk-src-itemref',   file:'src',   hints:['item ref','reference','material','ref no'] },
+  { id:'lk-inv-itemno',    file:'inv',   hints:['no\\.','item no','material','item number'] },
+  { id:'lk-inv-qty',       file:'inv',   hints:['on hand','available','stock','qty','quantity','unrestricted'] },
+  { id:'lk-dates-itemno',  file:'dates', hints:['no\\.','item no','material','item number'] },
+  { id:'lk-dates-qty',     file:'dates', hints:['outstanding','qty','quantity','open qty'] },
+  { id:'lk-dates-date',    file:'dates', hints:['date','delivery','expected','arrival','receipt'] },
+  { id:'lk-dict-itemref',  file:'dict',  hints:['item ref','reference','material','ref no'] },
+  { id:'lk-dict-itemno',   file:'dict',  hints:['no\\.','item no','material','item number'] },
+  { id:'lk-out-extdoc',    file:'out',   hints:['pur.doc','external','purch doc','po','ext doc'] },
+  { id:'lk-out-itemref',   file:'out',   hints:['material','item ref','reference'] },
+];
+
+const state = {
+  parsed:   { src:null, inv:null, dates:null, out:null },
+  dict:     null,   // { parsed, lkItemRef, lkItemNo, map: Map<itemRef→itemNo> }
+  customer: null,
+  logCount: 0,
+  colMap:   [],
+  compiled: null,
+  stage2:   null,
+};
+
+/* ══════════════════════════════════════════
+   SHEETJS — read raw values + serial dates
+══════════════════════════════════════════ */
+function parseFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        // Read with cellDates:false to get raw serial numbers for date cells
+        // We parse all dates ourselves to guarantee DD/MM/YYYY output
+        const wb = XLSX.read(new Uint8Array(e.target.result), {
+          type:'array', cellDates:false, raw:true
+        });
+        const result = { sheets:wb.SheetNames, active:wb.SheetNames[0], data:{}, raw:{} };
+        wb.SheetNames.forEach(n => {
+          const ws = wb.Sheets[n];
+          // raw:true gives us serial numbers for dates
+          result.raw[n]  = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', raw:true });
+          // raw:false gives formatted strings for display
+          result.data[n] = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', raw:false });
+        });
+        resolve(result);
+      } catch(e) { reject(e); }
+    };
+    reader.onerror = () => reject(new Error('Read failed'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+const getActiveRows    = p => p ? (p.data[p.active] || []) : [];
+const getActiveRawRows = p => p ? (p.raw[p.active]  || []) : [];
+const getHeaders       = p => { const r = getActiveRows(p); return r.length ? r[0].map(h => String(h).trim()) : []; };
+const getDataRows      = p => getActiveRows(p).slice(1);
+const getRawDataRows   = p => getActiveRawRows(p).slice(1);
+
+/* ══════════════════════════════════════════
+   DATE PARSING — serial-first, unambiguous
+══════════════════════════════════════════ */
+function parseDate(val) {
+  if (val === null || val === undefined || val === '') return null;
+
+  // Excel serial number (raw:true gives these for date cells) — fully unambiguous
+  if (typeof val === 'number' && val > 1000 && val < 200000) {
+    const d = new Date(Date.UTC(1900, 0, 1) + (Math.floor(val) - 2) * 86400000);
+    if (!isNaN(d.getTime())) return d;
+  }
+
+  const s = String(val).trim();
+  if (!s) return null;
+
+  // Numeric string — treat as serial
+  if (/^\d{4,6}$/.test(s)) {
+    const n = parseInt(s, 10);
+    if (n > 1000 && n < 200000) {
+      const d = new Date(Date.UTC(1900, 0, 1) + (n - 2) * 86400000);
+      if (!isNaN(d.getTime())) return d;
+    }
+  }
+
+  // D/M/Y pattern — detect format by whether second segment > 12
+  const parts = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+  if (parts) {
+    let a = parseInt(parts[1], 10);
+    let b = parseInt(parts[2], 10);
+    let y = parseInt(parts[3], 10);
+    if (y < 100) y += y < 50 ? 2000 : 1900;
+    // If b > 12 → must be day → format is M/D (SheetJS US output)
+    // If a > 12 → must be day → format is D/M (our locale)
+    // If both ≤ 12 → assume D/M (our locale)
+    const [day, mon] = b > 12 ? [b, a] : [a, b];
+    if (day >= 1 && day <= 31 && mon >= 1 && mon <= 12) {
+      const d = new Date(Date.UTC(y, mon - 1, day));
+      if (!isNaN(d.getTime())) return d;
+    }
+  }
+
+  // ISO YYYY-MM-DD
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) {
+    const d = new Date(Date.UTC(parseInt(iso[1]), parseInt(iso[2])-1, parseInt(iso[3])));
+    if (!isNaN(d.getTime())) return d;
+  }
+
+  return null;
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  return `${String(d.getUTCDate()).padStart(2,'0')}/${String(d.getUTCMonth()+1).padStart(2,'0')}/${d.getUTCFullYear()}`;
+}
+
+/* ══════════════════════════════════════════
+   ITEM REF DICTIONARY — static, localStorage
+══════════════════════════════════════════ */
+document.getElementById('file-dict').addEventListener('change', e => {
+  if (e.target.files[0]) handleDictFile(e.target.files[0]);
+});
+document.getElementById('zone-dict').addEventListener('dragover',  e => { e.preventDefault(); document.getElementById('zone-dict').classList.add('drag-over'); });
+document.getElementById('zone-dict').addEventListener('dragleave', () => document.getElementById('zone-dict').classList.remove('drag-over'));
+document.getElementById('zone-dict').addEventListener('drop', e => {
+  e.preventDefault(); document.getElementById('zone-dict').classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) handleDictFile(e.dataTransfer.files[0]);
+});
+
+async function handleDictFile(file) {
+  log('info', `Reading Item Reference List: ${file.name}…`);
+  try {
+    const parsed = await parseFile(file);
+    state.dict = { parsed, lkItemRef: '', lkItemNo: '', map: new Map() };
+    const h = getHeaders(parsed), r = getDataRows(parsed);
+    log('ok', `Dictionary: ${h.length} cols, ${r.length} rows`);
+
+    // Show pill
+    document.getElementById('zone-dict').style.display = 'none';
+    document.getElementById('pill-dict-name').textContent = file.name;
+    document.getElementById('pill-dict').style.display = 'flex';
+    document.getElementById('dict-loaded-info').style.display = 'none';
+
+    // Stats
+    const statsDiv = document.getElementById('dict-stats');
+    statsDiv.style.display = 'flex';
+    statsDiv.innerHTML = `<span class="schip"><strong>${r.length}</strong> entries</span><span class="schip"><strong>${h.length}</strong> cols</span>`;
+
+    // Populate LK dropdowns for dict
+    refreshDictLKOptions();
+
+    // Persist raw data to localStorage
+    saveDictToStorage(parsed, file.name);
+    updateReadiness();
+  } catch(err) {
+    log('err', `Failed to read dictionary: ${err.message}`);
+  }
+}
+
+function clearDict() {
+  state.dict = null;
+  document.getElementById('zone-dict').style.display = '';
+  document.getElementById('pill-dict').style.display = 'none';
+  document.getElementById('file-dict').value = '';
+  document.getElementById('dict-stats').style.display = 'none';
+  document.getElementById('dict-loaded-info').style.display = 'none';
+  document.getElementById('lk-dict-itemref').innerHTML = '<option value="">— select —</option>';
+  document.getElementById('lk-dict-itemno').innerHTML  = '<option value="">— select —</option>';
+  localStorage.removeItem(DICT_STORAGE_KEY);
+  log('info', 'Item Reference List cleared');
+  updateReadiness();
+}
+
+function refreshDictLKOptions() {
+  if (!state.dict?.parsed) return;
+  const cols = getHeaders(state.dict.parsed);
+  const saved = state.customer ? loadConfig(state.customer) : null;
+  ['lk-dict-itemref','lk-dict-itemno'].forEach(id => {
+    const sel = document.getElementById(id);
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">— select —</option>' +
+      cols.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
+    const savedVal = saved?.lk?.[id];
+    if      (savedVal && cols.includes(savedVal)) sel.value = savedVal;
+    else if (prev && cols.includes(prev))         sel.value = prev;
+    else {
+      const lk = LK_DEFS.find(l => l.id === id);
+      if (lk) { const re = new RegExp(lk.hints.join('|'),'i'); const m = cols.find(c=>re.test(c)); if(m) sel.value=m; }
+    }
+    sel.classList.toggle('set', !!sel.value);
+  });
+  buildDictMap();
+}
+
+function buildDictMap() {
+  if (!state.dict?.parsed) return;
+  const irCol = document.getElementById('lk-dict-itemref').value;
+  const inCol = document.getElementById('lk-dict-itemno').value;
+  if (!irCol || !inCol) return;
+  const rows  = getDataRows(state.dict.parsed);
+  const h     = getHeaders(state.dict.parsed);
+  const iiRef = h.indexOf(irCol), iiNo = h.indexOf(inCol);
+  state.dict.map = new Map();
+  rows.forEach(row => {
+    const ref = cellVal(row, iiRef);
+    const no  = cellVal(row, iiNo);
+    if (ref && no) state.dict.map.set(ref, no);
+  });
+  log('info', `Dictionary map built: ${state.dict.map.size} Item Ref → Item No. entries`);
+}
+
+// Persist dictionary to localStorage as JSON
+function saveDictToStorage(parsed, filename) {
+  try {
+    const payload = { filename, sheets: parsed.sheets, active: parsed.active, data: parsed.data };
+    localStorage.setItem(DICT_STORAGE_KEY, JSON.stringify(payload));
+    log('ok', `Dictionary saved to storage (${parsed.sheets.length} sheet(s))`);
+  } catch(err) {
+    log('warn', `Could not persist dictionary: ${err.message}`);
+  }
+}
+
+// Restore dictionary from localStorage on page load
+function loadDictFromStorage() {
+  try {
+    const raw = localStorage.getItem(DICT_STORAGE_KEY);
+    if (!raw) return;
+    const payload = JSON.parse(raw);
+    state.dict = { parsed: { sheets: payload.sheets, active: payload.active, data: payload.data }, lkItemRef:'', lkItemNo:'', map: new Map() };
+    const h = getHeaders(state.dict.parsed), r = getDataRows(state.dict.parsed);
+    // Show loaded state
+    document.getElementById('zone-dict').style.display = 'none';
+    document.getElementById('pill-dict').style.display = 'flex';
+    document.getElementById('pill-dict-name').textContent = payload.filename;
+    document.getElementById('dict-loaded-info').style.display = '';
+    const statsDiv = document.getElementById('dict-stats');
+    statsDiv.style.display = 'flex';
+    statsDiv.innerHTML = `<span class="schip"><strong>${r.length}</strong> entries</span><span class="schip"><strong>${h.length}</strong> cols</span>`;
+    log('info', `Dictionary restored from storage: ${payload.filename} — ${r.length} entries`);
+    refreshDictLKOptions();
+    updateReadiness();
+  } catch(err) {
+    log('warn', `Could not restore dictionary: ${err.message}`);
+  }
+}
+
+// Run on page load
+loadDictFromStorage();
+FILES.forEach(key => {
+  const input = document.getElementById('file-' + key);
+  const zone  = document.getElementById('zone-' + key);
+  input.addEventListener('change', e => { if (e.target.files[0]) handleFile(key, e.target.files[0]); });
+  zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); if (e.dataTransfer.files[0]) handleFile(key, e.dataTransfer.files[0]); });
+});
+
+async function handleFile(key, file) {
+  log('info', `Reading ${FLABELS[key]}: ${file.name}…`);
+  document.getElementById('zone-' + key).style.display = 'none';
+  document.getElementById('pill-' + key + '-name').textContent = file.name;
+  document.getElementById('pill-' + key).style.display = 'flex';
+  try {
+    state.parsed[key] = await parseFile(file);
+    const h = getHeaders(state.parsed[key]), r = getDataRows(state.parsed[key]);
+    log('ok', `${FLABELS[key]}: ${state.parsed[key].sheets.length} sheet(s), ${h.length} cols, ${r.length} rows`);
+    renderFileStats(key);
+    refreshLKOptions();
+    if (key === 'out') buildColMap();
+    refreshSourcePanel();
+  } catch(err) {
+    log('err', `Failed: ${FLABELS[key]} — ${err.message}`);
+    state.parsed[key] = null;
+  }
+  updateReadiness();
+}
+
+function clearFile(key) {
+  state.parsed[key] = null;
+  document.getElementById('zone-' + key).style.display = '';
+  document.getElementById('pill-' + key).style.display = 'none';
+  document.getElementById('file-' + key).value = '';
+  document.getElementById('card-' + key).querySelectorAll('.fstats,.ssheet').forEach(e => e.remove());
+  if (key === 'out') { state.colMap = []; renderColMapPanel(); }
+  refreshLKOptions();
+  refreshSourcePanel();
+  updateReadiness();
+}
+
+function renderFileStats(key) {
+  const card = document.getElementById('card-' + key);
+  card.querySelectorAll('.fstats,.ssheet').forEach(e => e.remove());
+  const p = state.parsed[key], h = getHeaders(p), r = getDataRows(p);
+  const d = document.createElement('div'); d.className = 'fstats';
+  d.innerHTML = `<span class="schip"><strong>${r.length}</strong> rows</span><span class="schip"><strong>${h.length}</strong> cols</span><span class="schip"><strong>${p.sheets.length}</strong> sheet${p.sheets.length>1?'s':''}</span>`;
+  card.appendChild(d);
+  if (p.sheets.length > 1) {
+    const sel = document.createElement('select'); sel.className = 'ssheet';
+    p.sheets.forEach(s => { const o = document.createElement('option'); o.value = o.textContent = s; sel.appendChild(o); });
+    sel.addEventListener('change', e => {
+      state.parsed[key].active = e.target.value;
+      renderFileStats(key);
+      refreshLKOptions();
+      if (key === 'out') buildColMap();
+      refreshSourcePanel();
+    });
+    card.appendChild(sel);
+  }
+}
+
+/* ══════════════════════════════════════════
+   LOGIC KEYS
+══════════════════════════════════════════ */
+function refreshLKOptions() {
+  const srcLoaded = ['src','inv','dates','out'].every(k => state.parsed[k]);
+  document.getElementById('lk-section').style.display = srcLoaded ? '' : 'none';
+  if (!srcLoaded) return;
+
+  const saved = state.customer ? loadConfig(state.customer) : null;
+
+  LK_DEFS.forEach(lk => {
+    if (lk.file === 'dict') return; // handled separately by refreshDictLKOptions
+    const sel  = document.getElementById(lk.id);
+    const prev = sel.value;
+    const cols = getHeaders(state.parsed[lk.file]);
+    sel.innerHTML = '<option value="">— select —</option>' +
+      cols.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
+    const savedVal = saved?.lk?.[lk.id];
+    if      (savedVal && cols.includes(savedVal)) sel.value = savedVal;
+    else if (prev && cols.includes(prev))         sel.value = prev;
+    else {
+      const re = new RegExp(lk.hints.join('|'), 'i');
+      const m  = cols.find(c => re.test(c));
+      if (m) sel.value = m;
+    }
+    sel.classList.toggle('set', !!sel.value);
+  });
+
+  // Output date col dropdown
+  const outCols = getHeaders(state.parsed.out);
+  const dateSel = document.getElementById('lk-out-datecol');
+  const prevDate = dateSel.value;
+  dateSel.innerHTML = '<option value="">— select output column —</option>' +
+    outCols.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
+  const savedDate = saved?.lk?.['lk-out-datecol'];
+  if      (savedDate && outCols.includes(savedDate))   dateSel.value = savedDate;
+  else if (prevDate  && outCols.includes(prevDate))    dateSel.value = prevDate;
+  else { const m = outCols.find(c => /date|deliv|arrival|eta/i.test(c)); if (m) dateSel.value = m; }
+
+  // Flag col dropdown
+  const flagSel  = document.getElementById('lk-out-flagcol');
+  const prevFlag = flagSel.value;
+  flagSel.innerHTML = '<option value="">— select output column —</option>' +
+    outCols.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
+  const savedFlag = saved?.lk?.['lk-out-flagcol'];
+  if      (savedFlag && outCols.includes(savedFlag))   flagSel.value = savedFlag;
+  else if (prevFlag  && outCols.includes(prevFlag))    flagSel.value = prevFlag;
+
+  // Restore match mode
+  if (saved?.lk?.['match-mode']) {
+    const el = document.getElementById(`mm-${saved.lk['match-mode']}`);
+    if (el) el.checked = true;
+  }
+
+  // Restore date col mode
+  if (saved?.lk?.['date-col-mode']) {
+    const el = document.getElementById(`dcm-${saved.lk['date-col-mode']}`);
+    if (el) el.checked = true;
+  }
+  if (saved?.lk?.['dcm-new-name']) document.getElementById('dcm-new-name').value = saved.lk['dcm-new-name'];
+
+  // Refresh dictionary key options if dict is loaded
+  if (state.dict?.parsed) refreshDictLKOptions();
+
+  onDateColModeChange();
+  onLKChange();
+}
+
+function onLKChange() {
+  LK_DEFS.forEach(lk => document.getElementById(lk.id).classList.toggle('set', !!document.getElementById(lk.id).value));
+  updateReadiness();
+}
+
+function getLK(id) { return document.getElementById(id).value; }
+function getMatchMode() { return document.querySelector('input[name="match-mode"]:checked')?.value || 'composite'; }
+function getDateColMode() { return document.querySelector('input[name="date-col-mode"]:checked')?.value || 'existing'; }
+
+function allLKSet() {
+  if (!LK_DEFS.filter(lk => lk.file !== 'dict').every(lk => !!getLK(lk.id))) return false;
+  const mode = getDateColMode();
+  if (mode === 'existing') return !!getLK('lk-out-datecol');
+  return true;
+}
+
+/* ══════════════════════════════════════════
+   DATE COL MODE
+══════════════════════════════════════════ */
+function onDateColModeChange() {
+  const mode = getDateColMode();
+  document.getElementById('dcm-existing-row').style.display   = mode === 'existing'   ? '' : 'none';
+  document.getElementById('dcm-firstempty-row').style.display = mode === 'firstempty' ? '' : 'none';
+  document.getElementById('dcm-new-row').style.display        = mode === 'new'        ? '' : 'none';
+  if (mode === 'firstempty' && state.parsed.out) {
+    const ci = detectFirstEmptyCol();
+    document.getElementById('dcm-firstempty-info').textContent =
+      ci >= 0 ? `Column ${colLetter(ci)} — no header` : 'No empty columns found';
+  }
+  onLKChange();
+}
+
+function detectFirstEmptyCol() {
+  if (!state.parsed.out) return -1;
+  const h = getHeaders(state.parsed.out);
+  const i = h.findIndex(x => !x.trim());
+  return i !== -1 ? i : h.length;
+}
+
+function colLetter(idx) {
+  let s = '', n = idx;
+  do { s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n/26) - 1; } while (n >= 0);
+  return s;
+}
+
+function resolveDateCol(outHeaders) {
+  const mode = getDateColMode();
+  if (mode === 'existing')   return { index: outHeaders.indexOf(getLK('lk-out-datecol')), isNew: false, newHeader: null };
+  if (mode === 'firstempty') { const i = detectFirstEmptyCol(); return { index: i, isNew: i >= outHeaders.length, newHeader: i >= outHeaders.length ? 'Allocated Date' : null }; }
+  if (mode === 'new')        { const name = document.getElementById('dcm-new-name').value.trim() || 'Allocated Date'; return { index: outHeaders.length, isNew: true, newHeader: name }; }
+  return { index: -1, isNew: false, newHeader: null };
+}
+
+/* ══════════════════════════════════════════
+   COLUMN MAP
+══════════════════════════════════════════ */
+function buildColMap() {
+  if (!state.parsed.out) return;
+  const outHeaders = getHeaders(state.parsed.out);
+  const saved      = state.customer ? loadConfig(state.customer) : null;
+  const srcHeaders = state.parsed.src ? getHeaders(state.parsed.src) : [];
+
+  state.colMap = outHeaders.map(outCol => {
+    if (saved?.colMap) {
+      const sv = saved.colMap.find(m => m.outCol === outCol);
+      if (sv && srcHeaders.includes(sv.srcCol)) return { outCol, srcCol: sv.srcCol };
+    }
+    const norm    = outCol.toLowerCase().replace(/[\s._\-]/g,'');
+    const exact   = srcHeaders.find(h => h.toLowerCase() === outCol.toLowerCase());
+    if (exact)   return { outCol, srcCol: exact };
+    const normed  = srcHeaders.find(h => h.toLowerCase().replace(/[\s._\-]/g,'') === norm);
+    if (normed)  return { outCol, srcCol: normed };
+    const partial = srcHeaders.find(h => { const hn = h.toLowerCase().replace(/[\s._\-]/g,''); return hn.includes(norm) || norm.includes(hn); });
+    return { outCol, srcCol: partial || '' };
+  });
+  renderColMapPanel();
+}
+
+function renderColMapPanel() {
+  const panel = document.getElementById('panel-colmap');
+  if (!state.colMap.length) {
+    panel.innerHTML = `<div class="empty-state"><div class="empty-icon">⚙️</div><div class="empty-title">Load the output template to configure column mapping</div></div>`;
+    document.getElementById('cnt-colmap').textContent = '—';
+    document.getElementById('warn-colmap').style.display = 'none';
+    return;
+  }
+  const srcHeaders = state.parsed.src ? getHeaders(state.parsed.src) : [];
+  const flagged    = state.colMap.filter(m => !m.srcCol).length;
+  document.getElementById('cnt-colmap').textContent = state.colMap.length;
+  document.getElementById('warn-colmap').style.display = flagged > 0 ? '' : 'none';
+
+  const colOpts = `<option value="">— leave blank —</option>` +
+    srcHeaders.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
+
+  const banner = flagged > 0
+    ? `<div class="callout warn"><strong>${flagged} column${flagged>1?'s':''} unmapped</strong> — will be blank in new rows. Columns with no source equivalent (e.g. Req Tracking Number) can be left unmapped.</div>`
+    : `<div class="callout ok"><strong>All columns mapped.</strong> Ready to run.</div>`;
+
+  const rows = state.colMap.map((m, i) => {
+    const mapped = !!m.srcCol;
+    return `<tr class="${!mapped?'row-flagged':''}">
+      <td><div class="out-col"><span class="lock-icon">🔒</span>${escHtml(m.outCol)}</div></td>
+      <td><select class="src-sel ${mapped?'mapped':'unmapped'}" onchange="onColMapChange(${i},this.value)">
+        ${colOpts.replace(`value="${escHtml(m.srcCol)}"`, `value="${escHtml(m.srcCol)}" selected`)}
+      </select></td>
+      <td>${mapped ? `<span class="ok-pill">✓ mapped</span>` : `<span class="flag-pill">⚠ unmapped</span>`}</td>
+    </tr>`;
+  }).join('');
+
+  panel.innerHTML = banner + `<div class="tscroll"><table class="map-table">
+    <thead><tr><th style="width:200px">Output Column (locked)</th><th>Source Column</th><th style="width:90px">Status</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+function onColMapChange(i, val) { state.colMap[i].srcCol = val; renderColMapPanel(); }
+
+/* ══════════════════════════════════════════
+   SAVE / LOAD
+══════════════════════════════════════════ */
+function saveConfig() {
+  if (!state.customer) return;
+  const lkVals = {};
+  [...LK_DEFS.map(l=>l.id), 'lk-out-datecol', 'lk-out-flagcol'].forEach(id => { lkVals[id] = getLK(id); });
+  lkVals['match-mode']    = getMatchMode();
+  lkVals['date-col-mode'] = getDateColMode();
+  lkVals['dcm-new-name']  = document.getElementById('dcm-new-name').value.trim();
+  localStorage.setItem(`db10_${state.customer}`, JSON.stringify({ lk: lkVals, colMap: state.colMap.map(m => ({ outCol:m.outCol, srcCol:m.srcCol })) }));
+  log('ok', `Config saved for ${state.customer.replace(/_/g,' ')}`);
+  const btn = document.getElementById('save-btn');
+  btn.textContent = `✓  Saved for ${state.customer.replace(/_/g,' ')}`;
+  setTimeout(() => { btn.innerHTML = `💾 &nbsp;Save config for <span id="save-label">${state.customer.replace(/_/g,' ')}</span>`; }, 2000);
+}
+function loadConfig(c) { try { const r = localStorage.getItem(`db10_${c}`); return r ? JSON.parse(r) : null; } catch { return null; } }
+
+/* ══════════════════════════════════════════
+   CUSTOMER
+══════════════════════════════════════════ */
+function selectCustomer(btn) {
+  document.querySelectorAll('.cust-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.customer = btn.dataset.c;
+  log('info', `Customer: ${btn.dataset.c.replace(/_/g,' ')}`);
+  document.getElementById('save-btn').style.display = '';
+  document.getElementById('save-label').textContent = btn.dataset.c.replace(/_/g,' ');
+  refreshLKOptions();
+  if (state.parsed.out) buildColMap();
+  updateReadiness();
+}
+
+/* ══════════════════════════════════════════
+   READINESS
+══════════════════════════════════════════ */
+function updateReadiness() {
+  const filesOk = FILES.every(k => state.parsed[k]);
+  const custOk  = !!state.customer;
+  const keysOk  = filesOk && allLKSet();
+  const allOk   = filesOk && custOk && keysOk;
+  [['pip-files',filesOk],['pip-cust',custOk],['pip-keys',keysOk]].forEach(([id,ok]) => {
+    document.getElementById(id).className = 'rpip' + (ok ? (allOk ? ' all' : ' on') : '');
+  });
+  document.getElementById('run-btn').disabled = !allOk;
+  setStep(1, filesOk ? 'done' : 'active');
+  setStep(2, filesOk && custOk ? 'done' : filesOk ? 'active' : '');
+  setStep(3, custOk && keysOk ? 'done' : custOk ? 'active' : '');
+  setStep(4, allOk ? 'active' : '');
+}
+function setStep(n, cls) { document.getElementById('s'+n).className = 'step'+(cls?' '+cls:''); }
+
+/* ══════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════ */
+function colIdx(file, col)  { return getHeaders(state.parsed[file]).indexOf(col); }
+function cellVal(row, i)    { return i >= 0 && row[i] !== undefined ? String(row[i]).trim() : ''; }
+function cellRaw(row, i)    { return i >= 0 && row[i] !== undefined ? row[i] : ''; }
+function parseQty(val)      { const n = parseFloat(String(val).replace(/[^0-9.\-]/g,'')); return isNaN(n) ? 0 : n; }
+
+// Reformat a cell value that may be a date — parse then output as DD/MM/YYYY
+function reformatDate(val) {
+  const d = parseDate(val);
+  return d ? fmtDate(d) : String(val || '');
+}
+
+/* ══════════════════════════════════════════
+   STAGE 1 — FIFO ALLOCATION
+   Priority: Inventory (IN STOCK) → PO Lines (dates)
+   Shows all contributing dates as comma-separated sequence
+══════════════════════════════════════════ */
+function runStage1() {
+  log('info', `Dictionary map size: ${state.dict?.map?.size || 0} entries`);
+
+  const srcRows     = getDataRows(state.parsed.src);
+  const srcRawRows  = getRawDataRows(state.parsed.src);
+  const invRows     = getDataRows(state.parsed.inv);
+  const datesRows   = getDataRows(state.parsed.dates);
+  const datesRawRows= getRawDataRows(state.parsed.dates);
+
+  const si = {
+    itemno:  colIdx('src', getLK('lk-src-itemno')),
+    qty:     colIdx('src', getLK('lk-src-qty')),
+    date:    colIdx('src', getLK('lk-src-date')),
+    extdoc:  colIdx('src', getLK('lk-src-extdoc')),
+    itemref: colIdx('src', getLK('lk-src-itemref')),
+  };
+  const ii = {
+    itemno: colIdx('inv', getLK('lk-inv-itemno')),
+    qty:    colIdx('inv', getLK('lk-inv-qty')),
+  };
+  const di = {
+    itemno: colIdx('dates', getLK('lk-dates-itemno')),
+    qty:    colIdx('dates', getLK('lk-dates-qty')),
+    date:   colIdx('dates', getLK('lk-dates-date')),
+  };
+
+  // Build inventory map: itemNo → remaining on-hand qty (mutable clone per item)
+  const invMap = new Map();
+  invRows.forEach(row => {
+    const item = cellVal(row, ii.itemno);
+    const qty  = parseQty(cellVal(row, ii.qty));
+    if (!item) return;
+    invMap.set(item, (invMap.get(item) || 0) + qty);
+  });
+  log('info', `Inventory indexed: ${invMap.size} unique items`);
+
+  // Build PO supply map: itemNo → sorted [{qty, remaining, date}]
+  // Zero-qty lines are skipped — no stock to receive
+  const supplyMap = new Map();
+  datesRows.forEach((row, ri) => {
+    const item = cellVal(row, di.itemno);
+    const qty  = parseQty(cellVal(row, di.qty));
+    const rawD = cellRaw(datesRawRows[ri], di.date);
+    const date = parseDate(rawD);
+    if (!item || qty <= 0) return;  // skip zero-qty PO lines
+    if (!supplyMap.has(item)) supplyMap.set(item, []);
+    supplyMap.get(item).push({ qty, remaining: qty, date });
+  });
+  supplyMap.forEach(arr => arr.sort((a,b) => (a.date||0) - (b.date||0)));
+  log('info', `PO Lines indexed: ${supplyMap.size} unique items`);
+
+  // Build demand list from source — use raw rows for dates
+  const demand = srcRows.map((row, origIdx) => ({
+    row,
+    sourceRow: row,
+    origIdx,
+    itemno:    cellVal(row, si.itemno),
+    qty:       parseQty(cellVal(row, si.qty)),
+    orderDate: parseDate(cellRaw(srcRawRows[origIdx], si.date)),
+    extdoc:    cellVal(row, si.extdoc),
+    itemref:   cellVal(row, si.itemref),
+    dateSeq:   [],   // ordered list of date strings for this demand row
+    status:    'unallocated',
+  }));
+
+  // Group by item, sort oldest → newest within each group
+  const byItem = new Map();
+  demand.forEach(d => { if (!byItem.has(d.itemno)) byItem.set(d.itemno, []); byItem.get(d.itemno).push(d); });
+  byItem.forEach(arr => arr.sort((a,b) => (a.orderDate||0) - (b.orderDate||0)));
+
+  // Clone inventory and supply per item to avoid bleed between items
+  let nFull=0, nPartial=0, nStock=0, nNoSupply=0;
+
+  byItem.forEach((demands, itemno) => {
+    // For inventory lookup, translate itemNo via dictionary if available
+    // Dictionary maps ItemRef → ItemNo, so we need to find the ItemRef for this itemNo
+    // We do a reverse lookup: find what ItemRef maps to this itemNo
+    // More directly: for each demand row, use its itemref to look up itemNo in dict,
+    // then use that to check inventory. Since demands are grouped by itemno already,
+    // we use the first demand's itemref to do the lookup.
+    const firstDem   = demands[0];
+    const dictItemNo = state.dict?.map?.get(firstDem.itemref) || null;
+    if (firstDem.itemref === '11004714') log('info', `DEBUG 11004714: itemno="${itemno}" itemref="${firstDem.itemref}" dictItemNo="${dictItemNo}" supplyDirect=${!!supplyMap.get(itemno)} supplyDict=${dictItemNo?!!supplyMap.get(dictItemNo):false}`);
+
+    // Inventory lookup — try direct itemno first, fall back to dict-resolved itemno
+    const invLookupKey = invMap.has(itemno) ? itemno : (dictItemNo || itemno);
+    const invQty = invMap.get(invLookupKey) || 0;
+    if (dictItemNo && invQty > 0 && invLookupKey !== itemno) log('info', `Inv dict lookup: Item Ref "${firstDem.itemref}" → Item No. "${dictItemNo}" — inv qty: ${invQty}`);
+
+    // PO supply lookup — try direct itemno first, fall back to dict-resolved itemno
+    let supply = supplyMap.get(itemno);
+    if (!supply && dictItemNo) {
+      supply = supplyMap.get(dictItemNo);
+      if (supply) log('info', `PO dict lookup: Item Ref "${firstDem.itemref}" → Item No. "${dictItemNo}" — ${supply.length} PO line(s) found`);
+    }
+    const supplyClone = supply ? supply.map(s => ({ ...s, remaining: s.qty })) : [];
+    let invRemaining = invQty;
+
+    let supplyPtr = 0;
+
+    demands.forEach(dem => {
+      let remaining = dem.qty;
+      const dateSeq = [];
+
+      // Step 1 — draw from inventory first
+      if (invRemaining > 0 && remaining > 0) {
+        const draw = Math.min(remaining, invRemaining);
+        invRemaining -= draw;
+        remaining    -= draw;
+        dem.invDraw = draw;  // store how much came from inventory
+        dateSeq.push(`${draw} IN STOCK`);
+      }
+
+      // Step 2 — draw from PO lines for remainder
+      while (remaining > 0 && supplyPtr < supplyClone.length) {
+        const s    = supplyClone[supplyPtr];
+        const draw = Math.min(remaining, s.remaining);
+        s.remaining -= draw;
+        remaining   -= draw;
+        const dateStr = s.date ? fmtDate(s.date) : null;
+        if (dateStr) {
+          // Check if we already have an entry for this date — add quantities if so
+          const existing = dateSeq.findIndex(e => e.endsWith(dateStr));
+          if (existing >= 0) {
+            // Parse out existing qty and add to it
+            const match = dateSeq[existing].match(/^(\d+(?:\.\d+)?)\s+due\s+/);
+            const existQty = match ? parseFloat(match[1]) : 0;
+            dateSeq[existing] = `${existQty + draw} due ${dateStr}`;
+          } else {
+            dateSeq.push(`${draw} due ${dateStr}`);
+          }
+        }
+        if (s.remaining <= 0) supplyPtr++;
+        if (remaining  <= 0) break;
+      }
+
+      dem.dateSeq = dateSeq;
+
+      if (remaining <= 0) {
+        const onlyStock = dateSeq.length === 1 && dateSeq[0].includes('IN STOCK');
+        dem.status = onlyStock ? 'in-stock' : 'allocated';
+        if (dem.status === 'in-stock') nStock++; else nFull++;
+      } else if (dateSeq.length > 0) {
+        dem.status = 'partial';
+        nPartial++;
+        log('warn', `Partial: item "${itemno}" — short by ${remaining}`);
+      } else {
+        dem.status = 'no-supply';
+        nNoSupply++;
+        log('warn', `No supply: item "${itemno}"`);
+      }
+    });
+  });
+
+  log('ok', `Stage 1 — ${nFull} allocated · ${nStock} in-stock · ${nPartial} partial · ${nNoSupply} no supply`);
+  state.compiled = { demand };
+  return { nFull, nStock, nPartial, nNoSupply };
+}
+
+/* ══════════════════════════════════════════
+   STAGE 2 — MATCH & FILL OUTPUT
+══════════════════════════════════════════ */
+function runStage2() {
+  log('info', '── Stage 2: match & fill output ──');
+
+  const outRows    = getDataRows(state.parsed.out);
+  const outHeaders = getHeaders(state.parsed.out);
+  const srcHeaders = getHeaders(state.parsed.src);
+  const matchMode  = getMatchMode();
+
+  const oiExtDoc  = outHeaders.indexOf(getLK('lk-out-extdoc'));
+  const oiItemRef = outHeaders.indexOf(getLK('lk-out-itemref'));
+  const oiFlagCol = outHeaders.indexOf(getLK('lk-out-flagcol'));
+
+  if (oiExtDoc < 0) { log('err', 'Output PUR.DOC column not found'); return null; }
+  if (matchMode === 'composite' && oiItemRef < 0) { log('err', 'Output MATERIAL column not found'); return null; }
+
+  // Resolve date col
+  const dateColResolved = resolveDateCol(outHeaders);
+  let { index: oiDateCol, isNew: dateColIsNew, newHeader: dateColHeader } = dateColResolved;
+  if (oiDateCol < 0) { log('err', 'Could not resolve output date column'); return null; }
+
+  const exportHeaders = [...outHeaders];
+  if (dateColIsNew) {
+    exportHeaders.push(dateColHeader || 'Allocated Date');
+    log('info', `Creating new date column: "${exportHeaders[exportHeaders.length-1]}" at ${colLetter(oiDateCol)}`);
+  }
+
+  // Max cols needed: matched rows need oiDateCol + dateSeq.length
+  // Appended rows need oiDateCol + 1 (REVIEW) + dateSeq.length
+  const maxSeqLen = Math.max(1, ...state.compiled.demand.map(d => d.dateSeq.length));
+  const extraColsNeeded = maxSeqLen; // +1 for REVIEW offset on appended rows
+  for (let i = 0; i < extraColsNeeded; i++) {
+    if (oiDateCol + 1 + i >= exportHeaders.length) exportHeaders.push('');
+  }
+  log('info', `Max date sequence: ${maxSeqLen} — total export cols: ${exportHeaders.length}`);
+
+  // Build output index
+  const outIndex = new Map();
+  outRows.forEach((row, i) => {
+    const ed  = cellVal(row, oiExtDoc);
+    const ir  = matchMode === 'composite' ? cellVal(row, oiItemRef) : '';
+    const key = matchMode === 'composite' ? `${ed}||${ir}` : ed;
+    if (key && key !== '||') outIndex.set(key, i);
+  });
+  log('info', `Output indexed: ${outIndex.size} rows (mode: ${matchMode})`);
+
+  // Clone output rows padded to exportHeaders length
+  // Use raw rows for the date column to ensure unambiguous serial-based parsing
+  const outRawRows = getRawDataRows(state.parsed.out);
+
+  // Debug — show raw vs formatted for first 3 rows in cols D (3) and M (12)
+  outRawRows.slice(0,3).forEach((raw, i) => {
+    log('info', `Out row ${i+2} col D raw="${raw[3]}" fmt="${outRows[i]?.[3]}" | col M raw="${raw[12]}" fmt="${outRows[i]?.[12]}"`);
+  });
+
+  const exportRows = outRows.map((r, ri) => {
+    const row    = new Array(exportHeaders.length).fill('');
+    const rawRow = outRawRows[ri] || [];
+    for (let i = 0; i < outHeaders.length; i++) {
+      const rawVal = rawRow[i];
+      const fmtVal = r[i] !== undefined ? r[i] : '';
+      // If raw value is a numeric serial in date range — parse and reformat
+      if (typeof rawVal === 'number' && rawVal > 1000 && rawVal < 200000) {
+        const parsed = parseDate(rawVal);
+        row[i] = parsed ? fmtDate(parsed) : String(fmtVal);
+      } else {
+        row[i] = String(fmtVal);
+      }
+    }
+    return row;
+  });
+
+  // Strip trailing empty rows from the cloned template so appended rows
+  // sit directly below the last row with data
+  while (exportRows.length > 0) {
+    const last = exportRows[exportRows.length - 1];
+    if (last.every(v => v === '' || v === null || v === undefined)) {
+      exportRows.pop();
+    } else {
+      break;
+    }
+  }
+
+  // Src header index
+  // Build src raw row index for unambiguous date parsing
+  const srcRawRows = getRawDataRows(state.parsed.src);
+  // Map demand origIdx → raw row
+  const demandRawMap = new Map();
+  state.compiled.demand.forEach(dem => { demandRawMap.set(dem.origIdx, srcRawRows[dem.origIdx]); });
+
+  const srcIdx = {};
+  srcHeaders.forEach((h,i) => { srcIdx[h] = i; });
+
+  const matchResults = [];
+  const matchedOutRows = new Set();
+  let nUpdated=0, nAppended=0;
+
+  state.compiled.demand.forEach(dem => {
+    const ed    = dem.extdoc;
+    const ir    = dem.itemref;
+    const key   = matchMode === 'composite' ? `${ed}||${ir}` : ed;
+    const dateStr = dem.dateSeq.join(', ');
+
+    // Fill mapped columns — reformat dates on the way through
+    const fillRow = (row, isAppend) => {
+      // Ensure row is wide enough
+      while (row.length < exportHeaders.length) row.push('');
+
+      state.colMap.forEach(m => {
+        if (!m.srcCol) return;
+        const oi = exportHeaders.indexOf(m.outCol);
+        const si = srcIdx[m.srcCol];
+        if (oi >= 0 && si !== undefined && dem.sourceRow) {
+          const rawRow = demandRawMap.get(dem.origIdx);
+          const rawVal = rawRow ? rawRow[si] : dem.sourceRow[si];
+          const fmtVal = dem.sourceRow[si] ?? '';
+          // Use raw value for date parsing (serial numbers are unambiguous)
+          // Fall back to formatted string if raw doesn't parse as date
+          const parsed = rawVal !== '' && rawVal !== undefined ? parseDate(rawVal) : null;
+          row[oi] = parsed ? fmtDate(parsed) : String(fmtVal);
+        }
+      });
+
+      // Write date sequence AFTER column map — always wins
+      if (oiDateCol >= 0) {
+        if (isAppend) {
+          // Unmatched rows: REVIEW in date col, then dates extend right from date col+1
+          row[oiDateCol] = 'REVIEW';
+          dem.dateSeq.forEach((d, i) => {
+            const ci = oiDateCol + 1 + i;
+            while (row.length <= ci) row.push('');
+            row[ci] = d;
+          });
+        } else if (dem.dateSeq.length <= 1) {
+          // Single date or empty — one cell
+          row[oiDateCol] = dem.dateSeq[0] || '';
+        } else {
+          // Multiple dates — each in its own column extending right
+          dem.dateSeq.forEach((d, i) => {
+            const ci = oiDateCol + i;
+            while (row.length <= ci) row.push('');
+            row[ci] = d;
+          });
+        }
+      }
+    };
+
+    if (outIndex.has(key)) {
+      const rowIdx = outIndex.get(key);
+      fillRow(exportRows[rowIdx], false);
+      matchedOutRows.add(rowIdx);
+      const dateDisplay = dem.dateSeq.length <= 1
+        ? (dem.dateSeq[0] || '—')
+        : dem.dateSeq.map((d,i) => `<span style="color:var(--muted);font-size:9px">Col ${colLetter(oiDateCol+i)}:</span> ${escHtml(d)}`).join(' &nbsp;');
+      matchResults.push({ action:'UPDATE', extdoc:ed, itemref:ir, dateStr:dem.dateSeq.join(', '), dateDisplay, outRow:rowIdx+2, status:dem.status });
+      nUpdated++;
+    } else {
+      const newRow = new Array(exportHeaders.length).fill('');
+      fillRow(newRow, true);
+      exportRows.push(newRow);
+      log('info', `Appended row ${exportRows.length}: extdoc="${ed}" itemref="${ir}"`);
+      const dateDisplay = `<span style="color:var(--red);font-size:9px;font-family:var(--mono)">REVIEW</span>` +
+        (dem.dateSeq.length ? ' &nbsp;' + dem.dateSeq.map((d,i) => `<span style="color:var(--muted);font-size:9px">Col ${colLetter(oiDateCol+1+i)}:</span> ${escHtml(d)}`).join(' &nbsp;') : '');
+      matchResults.push({ action:'APPEND', extdoc:ed, itemref:ir, dateStr:dem.dateSeq.join(', '), dateDisplay, status:dem.status, reason:'No match — appended with REVIEW' });
+      nAppended++;
+    }
+  });
+
+  // Flag output rows with no source match
+  const flaggedOutRows = [];
+  outRows.forEach((row, i) => {
+    if (!matchedOutRows.has(i)) {
+      const ed = cellVal(row, oiExtDoc), ir = matchMode==='composite' ? cellVal(row, oiItemRef) : '';
+      if (ed) flaggedOutRows.push({ rowIdx:i+2, extdoc:ed, itemref:ir });
+    }
+  });
+
+  log('ok', `Stage 2 — ${nUpdated} updated · ${nAppended} appended · ${flaggedOutRows.length} output unmatched`);
+  state.stage2 = { matchResults, exportRows, outHeaders:exportHeaders, flaggedOutRows, oiDateCol, nUpdated, nAppended };
+  return state.stage2;
+}
+
+/* ══════════════════════════════════════════
+   RUN ALL
+══════════════════════════════════════════ */
+function runAll() {
+  log('ok', `━━ Run: ${state.customer.replace(/_/g,' ')} ━━`);
+  state.compiled = null; state.stage2 = null;
+  const s1 = runStage1();
+  if (!s1) return;
+  renderStage1Panel(s1);
+  setStep(4,'done'); setStep(5,'active');
+  const s2 = runStage2();
+  if (!s2) return;
+  renderStage2Panel(s2);
+  renderFlagsPanel(s2);
+  setStep(5,'done'); setStep(6,'active');
+  showTab('stage1', document.querySelector('.tab'));
+}
+
+/* ══════════════════════════════════════════
+   RENDER — STAGE 1
+══════════════════════════════════════════ */
+const S1_PAGE = 200;
+function renderStage1Panel({ nFull, nStock, nPartial, nNoSupply }) {
+  const { demand } = state.compiled;
+  document.getElementById('cnt-s1').textContent = demand.length;
+
+  document.getElementById('panel-stage1').innerHTML = `
+    <div class="sum-grid">
+      <div class="sum-card"><div class="sum-num c-green">${demand.length}</div><div class="sum-label">Lines Processed</div></div>
+      <div class="sum-card"><div class="sum-num c-teal">${nStock}</div><div class="sum-label">In Stock</div></div>
+      <div class="sum-card"><div class="sum-num c-green">${nFull}</div><div class="sum-label">Fully Allocated</div></div>
+      <div class="sum-card"><div class="sum-num c-amber">${nPartial + nNoSupply}</div><div class="sum-label">Partial / No Supply</div></div>
+    </div>
+    <div class="callout ok"><strong>Stage 1 complete.</strong> Review allocations below.</div>
+    <div class="tscroll" id="s1-table-wrap">
+      <table class="dtable" id="s1-table">
+        <thead><tr><th>Item No.</th><th>Ext Doc No.</th><th>Item Ref</th><th>Qty</th><th>Order Date</th><th class="kh">Allocated Date(s)</th><th>Status</th></tr></thead>
+        <tbody id="s1-tbody"></tbody>
+      </table>
+      <div id="s1-more"></div>
+    </div>`;
+
+  renderStage1Rows(0, S1_PAGE);
+}
+
+function renderStage1Rows(from, pageSize) {
+  const { demand } = state.compiled;
+  const statusBadge = d => {
+    if (d.status==='in-stock')  return `<span class="badge b-stock">IN STOCK</span>`;
+    if (d.status==='allocated') return `<span class="badge b-match">✓ allocated</span>`;
+    if (d.status==='partial')   return `<span class="badge b-nosrc">~ partial</span>`;
+    return `<span class="badge" style="background:rgba(224,85,85,.12);color:var(--red)">✗ no supply</span>`;
+  };
+  const slice = demand.slice(from, from + pageSize);
+  const tbody  = document.getElementById('s1-tbody');
+  if (!tbody) return;
+  slice.forEach(d => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escHtml(d.itemno)}</td>
+      <td>${escHtml(d.extdoc)}</td>
+      <td>${escHtml(d.itemref)}</td>
+      <td>${d.qty}</td>
+      <td>${d.orderDate ? fmtDate(d.orderDate) : '<span style="color:var(--muted)">—</span>'}</td>
+      <td class="kc">${d.dateSeq.length ? escHtml(d.dateSeq.join(', ')) : '<span style="color:var(--muted)">—</span>'}</td>
+      <td>${statusBadge(d)}</td>`;
+    tbody.appendChild(tr);
+  });
+  const next = from + pageSize;
+  const moreDiv = document.getElementById('s1-more');
+  if (moreDiv) {
+    if (next < demand.length) {
+      moreDiv.innerHTML = `<div class="more-rows" style="cursor:pointer;color:var(--accent)" onclick="renderStage1Rows(${next},${pageSize})">▼ Show next ${Math.min(pageSize, demand.length-next)} of ${demand.length-next} remaining rows</div>`;
+    } else {
+      moreDiv.innerHTML = '';
+    }
+  }
+}
+
+/* ══════════════════════════════════════════
+   RENDER — STAGE 2
+══════════════════════════════════════════ */
+const S2_PAGE = 200;
+function renderStage2Panel({ matchResults, nUpdated, nAppended, flaggedOutRows, outHeaders, oiDateCol }) {
+  document.getElementById('cnt-s2').textContent = matchResults.length;
+  document.getElementById('warn-s2').style.display = (nAppended + flaggedOutRows.length) > 0 ? '' : 'none';
+
+  document.getElementById('panel-stage2').innerHTML = `
+    <div class="sum-grid">
+      <div class="sum-card"><div class="sum-num c-green">${nUpdated}</div><div class="sum-label">Rows Updated</div></div>
+      <div class="sum-card"><div class="sum-num c-amber">${nAppended}</div><div class="sum-label">Rows Appended</div></div>
+      <div class="sum-card"><div class="sum-num c-red">${flaggedOutRows.length}</div><div class="sum-label">Output Unmatched</div></div>
+      <div class="sum-card"><div class="sum-num" style="color:var(--purple);font-size:13px;padding-top:6px">${escHtml(outHeaders[oiDateCol]||'—')}</div><div class="sum-label">Date Column</div></div>
+    </div>
+    <div class="callout ok"><strong>Stage 2 complete.</strong> Matched rows updated. Unmatched rows appended with REVIEW flag.</div>
+    <div class="tscroll">
+      <table class="dtable">
+        <thead><tr><th>Action</th><th>Ext Doc No.</th><th>Item Ref</th><th>Date Sequence</th><th>Note</th></tr></thead>
+        <tbody id="s2-tbody"></tbody>
+      </table>
+      <div id="s2-more"></div>
+    </div>
+    <button class="export-btn" onclick="exportOutput()">⬇ &nbsp;Export Updated Output</button>
+    <button class="export-btn secondary" onclick="exportSourceWithDates()">⬇ &nbsp;Export Source + Dates (col AO)</button>`;
+
+  renderStage2Rows(0, S2_PAGE);
+}
+
+function renderStage2Rows(from, pageSize) {
+  const { matchResults, oiDateCol } = state.stage2;
+  const tbody = document.getElementById('s2-tbody');
+  if (!tbody) return;
+  matchResults.slice(from, from + pageSize).forEach(r => {
+    const cls  = r.action==='UPDATE' ? 'b-match' : 'b-append';
+    const note = r.action==='UPDATE' ? `Row ${r.outRow}` : r.reason;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="badge ${cls}">${r.action}</span></td>
+      <td>${escHtml(r.extdoc)}</td>
+      <td>${escHtml(r.itemref||'—')}</td>
+      <td style="max-width:360px;white-space:normal">${r.dateDisplay||'—'}</td>
+      <td style="color:var(--muted);font-size:10px">${escHtml(note||'')}</td>`;
+    tbody.appendChild(tr);
+  });
+  const next = from + pageSize;
+  const moreDiv = document.getElementById('s2-more');
+  if (moreDiv) {
+    if (next < matchResults.length) {
+      moreDiv.innerHTML = `<div class="more-rows" style="cursor:pointer;color:var(--accent)" onclick="renderStage2Rows(${next},${pageSize})">▼ Show next ${Math.min(pageSize, matchResults.length-next)} of ${matchResults.length-next} remaining rows</div>`;
+    } else {
+      moreDiv.innerHTML = '';
+    }
+  }
+}
+
+/* ══════════════════════════════════════════
+   RENDER — FLAGS
+══════════════════════════════════════════ */
+function renderFlagsPanel({ flaggedOutRows, matchResults }) {
+  const appendedRows = matchResults.filter(r => r.action === 'APPEND');
+  const total = flaggedOutRows.length + appendedRows.length;
+  document.getElementById('cnt-flags').textContent = total;
+  document.getElementById('warn-flags').style.display = total > 0 ? '' : 'none';
+
+  if (!total) {
+    document.getElementById('panel-flags').innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">No flags</div><div class="empty-sub">Every output row matched a source row and vice versa.</div></div>`;
+    return;
+  }
+
+  const explanationHTML = `
+    <div class="callout warn" style="margin-bottom:10px">
+      <strong>Why are rows flagged for review?</strong><br><br>
+      <span style="color:var(--amber)">▶ Source rows with no output match</span> — these lines exist in your source document but could not be matched to any existing row in the output template using the configured key columns (Ext Doc No.${ getMatchMode()==='composite' ? ' + Item Ref' : '' }). They have been appended to the bottom of the output file with <strong>REVIEW</strong> written in the flag column. Common causes:
+      <ul style="margin:6px 0 0 16px;line-height:1.8;font-size:11px">
+        <li>The purchase order does not yet exist in the customer's system</li>
+        <li>The item reference or external document number differs between your source and the customer's template</li>
+        <li>The row is genuinely new and needs to be reviewed before the customer accepts it</li>
+      </ul>
+      <br>
+      <span style="color:var(--red)">▶ Output rows with no source match</span> — these lines exist in the customer's output template but were not found in your source document. No changes have been made to them. Common causes:
+      <ul style="margin:6px 0 0 16px;line-height:1.8;font-size:11px">
+        <li>The order has already been fully delivered and no longer appears in your source</li>
+        <li>The external document number or item reference in the output template doesn't match your source data</li>
+        <li>The row belongs to a different customer order not included in this run</li>
+      </ul>
+    </div>`;
+
+  // Source rows appended with REVIEW
+  const srcRows = appendedRows.map(r => `<tr>
+    <td style="color:var(--amber);font-weight:600">Source → Output</td>
+    <td>${escHtml(r.extdoc)}</td>
+    <td>${escHtml(r.itemref||'—')}</td>
+    <td style="color:var(--muted);font-size:10px">No matching row found in output template — appended with REVIEW flag</td>
+  </tr>`).join('');
+
+  // Output rows with no source match
+  const outRows = flaggedOutRows.map(r => `<tr>
+    <td style="color:var(--red);font-weight:600">Output only</td>
+    <td>${escHtml(r.extdoc)}</td>
+    <td>${escHtml(r.itemref||'—')}</td>
+    <td style="color:var(--muted);font-size:10px">Row ${r.rowIdx} — exists in output template but not found in source document. No changes made.</td>
+  </tr>`).join('');
+
+  document.getElementById('panel-flags').innerHTML = `
+    ${explanationHTML}
+    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">
+      ${appendedRows.length} source unmatched &nbsp;·&nbsp; ${flaggedOutRows.length} output unmatched
+    </div>
+    <div class="tscroll">
+      <table class="dtable">
+        <thead><tr><th>Flag Type</th><th>Ext Doc No.</th><th>Item Ref</th><th>Reason</th></tr></thead>
+        <tbody>${srcRows}${outRows}</tbody>
+      </table>
+    </div>`;
+}
+
+/* ══════════════════════════════════════════
+   EXPORT — OUTPUT
+══════════════════════════════════════════ */
+function exportOutput() {
+  if (!state.stage2) return;
+  const { exportRows, outHeaders } = state.stage2;
+  log('info', `exportOutput called: exportRows.length=${exportRows.length}`);
+
+  // Calculate true max column width
+  let maxCols = outHeaders.length;
+  exportRows.forEach(row => { if (row.length > maxCols) maxCols = row.length; });
+
+  // Pad all rows to maxCols and stringify every cell
+  const allRows = [outHeaders, ...exportRows].map(row => {
+    const padded = new Array(maxCols).fill('');
+    row.forEach((v, i) => { padded[i] = String(v ?? ''); });
+    return padded;
+  });
+
+  // Build worksheet via aoa_to_sheet with raw:true to avoid type inference
+  const ws = XLSX.utils.aoa_to_sheet(allRows, { raw: true });
+
+  // Force every cell to string type — prevents date reinterpretation
+  Object.keys(ws).forEach(key => {
+    if (key.startsWith('!')) return;
+    ws[key] = { t: 's', v: String(ws[key].v ?? '') };
+  });
+
+  // Explicitly set !ref to cover all rows and cols — overrides any stale metadata
+  ws['!ref'] = XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r:allRows.length-1, c:maxCols-1} });
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Output');
+  const fname = `${state.customer}_output_${new Date().toISOString().slice(0,10)}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  log('ok', `Exported: ${fname} — ${exportRows.length} data rows, ${maxCols} cols`);
+}
+
+/* ══════════════════════════════════════════
+   EXPORT — SOURCE WITH DATES (col AO)
+══════════════════════════════════════════ */
+function exportSourceWithDates() {
+  if (!state.compiled) return;
+  const { demand } = state.compiled;
+  const srcH = getHeaders(state.parsed.src);
+  const TARGET_COL = 40;
+  const headers = [...srcH];
+  while (headers.length <= TARGET_COL) headers.push('');
+  if (!headers[TARGET_COL]) headers[TARGET_COL] = 'Allocated Date';
+
+  const wb = XLSX.utils.book_new();
+  const ws = {};
+  const allRows = [headers, ...demand.map(d => {
+    const row = new Array(headers.length).fill('');
+    d.row.forEach((v,i) => { if (i < srcH.length) row[i] = v; });
+    row[TARGET_COL] = d.dateSeq.join(', ');
+    return row;
+  })];
+  allRows.forEach((row, ri) => {
+    row.forEach((val, ci) => {
+      const ref = XLSX.utils.encode_cell({ r:ri, c:ci });
+      ws[ref] = { t:'s', v:String(val ?? '') };
+    });
+  });
+  ws['!ref'] = XLSX.utils.encode_range({ s:{r:0,c:0}, e:{r:allRows.length-1, c:headers.length-1} });
+  XLSX.utils.book_append_sheet(wb, ws, 'Source');
+  const fname = `${state.customer}_source_with_dates_${new Date().toISOString().slice(0,10)}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  log('ok', `Exported source: ${fname}`);
+}
+
+/* ══════════════════════════════════════════
+   SOURCE DATA PANEL
+══════════════════════════════════════════ */
+const PREV_ROWS = 500;
+function refreshSourcePanel() {
+  const panel  = document.getElementById('panel-source');
+  const loaded = FILES.filter(k => state.parsed[k]);
+  // Also include dictionary if loaded
+  const dictLoaded = state.dict?.parsed ? true : false;
+  if (!loaded.length) {
+    panel.innerHTML = `<div class="empty-state"><div class="empty-icon">📂</div><div class="empty-title">No files loaded yet</div></div>`;
+    document.getElementById('cnt-src').textContent = '—'; return;
+  }
+  const keyHL = {
+    src:   new Set([getLK('lk-src-itemno'),getLK('lk-src-qty'),getLK('lk-src-date'),getLK('lk-src-extdoc'),getLK('lk-src-itemref')].filter(Boolean)),
+    inv:   new Set([getLK('lk-inv-itemno'),getLK('lk-inv-qty')].filter(Boolean)),
+    dates: new Set([getLK('lk-dates-itemno'),getLK('lk-dates-qty'),getLK('lk-dates-date')].filter(Boolean)),
+    out:   new Set([getLK('lk-out-extdoc'),getLK('lk-out-itemref'),getLK('lk-out-datecol'),getLK('lk-out-flagcol')].filter(Boolean)),
+  };
+
+  panel.innerHTML = loaded.map(key => {
+    const p = state.parsed[key], h = getHeaders(p), r = getDataRows(p);
+    const kc = keyHL[key] || new Set();
+    const ths = h.map(c => `<th class="${kc.has(c)?'kh':''}">${escHtml(c)}</th>`).join('');
+    return `<div class="prev-section">
+      <div class="prev-title">
+        <div class="dot ${FDOTS[key]}"></div>${FLABELS[key]}
+        <span style="color:var(--border)">·</span><span>${p.active}</span>
+        <span style="color:var(--border)">·</span><span id="src-count-${key}">${r.length} rows · ${h.length} cols</span>
+      </div>
+      <input type="text" placeholder="Filter rows…" oninput="filterSourceTable('${key}', this.value)"
+        style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 9px;font-size:11px;font-family:var(--mono);color:var(--text);margin-bottom:6px;">
+      <div class="tscroll" style="margin-bottom:0;max-height:400px;overflow-y:auto">
+        <table class="dtable" id="src-table-${key}">
+          <thead><tr>${ths}</tr></thead>
+          <tbody id="src-tbody-${key}"></tbody>
+        </table>
+        <div id="src-more-${key}"></div>
+      </div>
+    </div>`;
+  }).join('') + (dictLoaded ? renderDictSection() : '');
+
+  loaded.forEach(key => renderSourceRows(key, 0, PREV_ROWS, ''));
+  if (dictLoaded) renderSourceRows('dict', 0, PREV_ROWS, '');
+  document.getElementById('cnt-src').textContent = `${loaded.length + (dictLoaded?1:0)} file${loaded.length>1?'s':''}`;
+}
+
+function renderDictSection() {
+  const p = state.dict.parsed;
+  const h = getHeaders(p), r = getDataRows(p);
+  const kc = new Set([getLK('lk-dict-itemref'), getLK('lk-dict-itemno')].filter(Boolean));
+  const ths = h.map(c => `<th class="${kc.has(c)?'kh':''}">${escHtml(c)}</th>`).join('');
+  return `<div class="prev-section">
+    <div class="prev-title">
+      <div class="dot" style="background:var(--purple)"></div>Item Reference List
+      <span style="color:var(--border)">·</span><span>${p.active}</span>
+      <span style="color:var(--border)">·</span><span id="src-count-dict">${r.length} rows · ${h.length} cols</span>
+    </div>
+    <input type="text" placeholder="Filter rows…" oninput="filterSourceTable('dict', this.value)"
+      style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 9px;font-size:11px;font-family:var(--mono);color:var(--text);margin-bottom:6px;">
+    <div class="tscroll" style="margin-bottom:0;max-height:400px;overflow-y:auto">
+      <table class="dtable" id="src-table-dict">
+        <thead><tr>${ths}</tr></thead>
+        <tbody id="src-tbody-dict"></tbody>
+      </table>
+      <div id="src-more-dict"></div>
+    </div>
+  </div>`;
+}
+
+function renderSourceRows(key, from, pageSize, filter) {
+  const p  = key === 'dict' ? state.dict?.parsed : state.parsed[key];
+  if (!p) return;
+  const h  = getHeaders(p);
+  const r  = getDataRows(p);
+  const kc = key === 'dict'
+    ? new Set([getLK('lk-dict-itemref'), getLK('lk-dict-itemno')].filter(Boolean))
+    : new Set([
+        getLK('lk-src-itemno'),getLK('lk-src-qty'),getLK('lk-src-date'),getLK('lk-src-extdoc'),getLK('lk-src-itemref'),
+        getLK('lk-inv-itemno'),getLK('lk-inv-qty'),
+        getLK('lk-dates-itemno'),getLK('lk-dates-qty'),getLK('lk-dates-date'),
+        getLK('lk-out-extdoc'),getLK('lk-out-itemref'),getLK('lk-out-datecol'),getLK('lk-out-flagcol'),
+      ].filter(Boolean));
+
+  const norm = filter.toLowerCase();
+  const filtered = norm
+    ? r.filter(row => row.some(v => String(v).toLowerCase().includes(norm)))
+    : r;
+
+  const tbody = document.getElementById('src-tbody-' + key);
+  const moreDiv = document.getElementById('src-more-' + key);
+  const countEl = document.getElementById('src-count-' + key);
+  if (!tbody) return;
+
+  // On first page clear; on subsequent pages append
+  if (from === 0) tbody.innerHTML = '';
+
+  const slice = filtered.slice(from, from + pageSize);
+  slice.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = h.map((c, i) => {
+      const v = row[i] !== undefined ? String(row[i]) : '';
+      const k = kc.has(c) ? ' kc' : '';
+      return v ? `<td class="${k}" title="${escHtml(v)}">${escHtml(v)}</td>`
+               : `<td class="ec${k}">—</td>`;
+    }).join('');
+    tbody.appendChild(tr);
+  });
+
+  const next = from + pageSize;
+  if (countEl) countEl.textContent = `${filtered.length} of ${r.length} rows · ${h.length} cols`;
+  if (moreDiv) {
+    if (next < filtered.length) {
+      moreDiv.innerHTML = `<div class="more-rows" style="cursor:pointer;color:var(--accent)" 
+        onclick="renderSourceRows('${key}',${next},${pageSize},'${filter.replace(/'/g,"\\'")}')">
+        ▼ Show next ${Math.min(pageSize, filtered.length-next)} of ${filtered.length-next} remaining rows</div>`;
+    } else {
+      moreDiv.innerHTML = '';
+    }
+  }
+}
+
+function filterSourceTable(key, value) {
+  renderSourceRows(key, 0, PREV_ROWS, value);
+}
+
+/* ══════════════════════════════════════════
+   TABS / LOG / UTIL
+══════════════════════════════════════════ */
+function showTab(name, el) {
+  ['stage1','stage2','flags','colmap','source','log'].forEach(t => { document.getElementById('panel-'+t).style.display = t===name?'':'none'; });
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+function log(type, msg) {
+  state.logCount++;
+  document.getElementById('cnt-log').textContent = state.logCount;
+  const now=new Date(), ts=[now.getHours(),now.getMinutes(),now.getSeconds()].map(n=>String(n).padStart(2,'0')).join(':');
+  const d=document.createElement('div'); d.className='log-entry';
+  d.innerHTML=`<span class="log-time">${ts}</span><span class="log-${type}">${escHtml(msg)}</span>`;
+  const el=document.getElementById('log-entries'); el.appendChild(d); el.scrollTop=el.scrollHeight;
+}
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ══════════════════════════════════════════
+   PWA — SERVICE WORKER REGISTRATION
+══════════════════════════════════════════ */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => {
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
